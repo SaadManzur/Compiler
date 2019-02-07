@@ -13,6 +13,7 @@ class Scanner
 {
 private:
 	Logger logger;
+
 	std::vector<string> identifierList;
 	map<string, int> keywords = {
 		{"then", 41}, {"do", 42}, {"od", 81}, {"fi", 82}, {"else", 90}, {"let", 100}, {"call", 101}, {"if", 102}, {"while", 103},
@@ -23,6 +24,7 @@ private:
 	char inputSymbol;
 	int value;
 	int id;
+	string error;
 	string buffer;
 
 	FileReader *fileReader;

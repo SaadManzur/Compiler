@@ -4,7 +4,25 @@ Scanner::Scanner(string fileName)
 {
 	fileReader = new FileReader(fileName);
 	inputSymbol = fileReader->GetSymbol();
-	Scan();
+}
+
+int Scanner::GetSymbol()
+{
+	Next();
+
+	ProcessToken();
+
+	return symbol;
+}
+
+int Scanner::GetNumber()
+{
+	return value;
+}
+
+int Scanner::GetId()
+{
+	return id;
 }
 
 void Scanner::ProcessToken()
@@ -172,14 +190,14 @@ void Scanner::ProcessToken()
 			if (symbol == errorToken)
 			{
 				identifierList.push_back(buffer);
-				symbol = ident;
+				symbol = identToken;
 			}
 		}
 		else if (isdigit(inputSymbol))
 		{
 			readNumber();
 
-			symbol = number;
+			symbol = numberToken;
 		}
 		
 		break;
@@ -197,6 +215,7 @@ void Scanner::Scan()
 		if (symbol == errorToken)
 		{
 			logger.Error("Syntax error.");
+			error = "Syntax error.";
 			return;
 		}
 
@@ -292,8 +311,6 @@ void Scanner::readNumber()
 		buffer += inputSymbol;
 		Next();
 	}
-
-	buffer += "\0";
 
 	value = atoi(buffer.c_str());
 }
