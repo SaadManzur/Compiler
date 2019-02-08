@@ -65,8 +65,13 @@ class SyntaxException : public std::exception
 {
 private:
 	string message;
+	int lineNumber;
+	int colNumber;
 
 public:
 	SyntaxException();
 	SyntaxException(string message);
+	SyntaxException(int lineNumber, int colNumber, string message = "Syntax error");
+
+	string getMessage();
 };

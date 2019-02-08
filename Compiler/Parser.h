@@ -47,10 +47,10 @@ private:
 
 	void computation();
 
-	bool InputNum();
-	bool OutputNum(int x);
+	void InputNum();
+	void OutputNum();
 
-	bool OutputNewLine();
+	void OutputNewLine();
 
 public:
 	Parser(Scanner *scanner);
