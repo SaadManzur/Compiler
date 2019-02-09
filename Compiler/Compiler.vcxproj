@@ -118,12 +118,15 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="FileReader.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="Parser.h" />
     <ClInclude Include="Scanner.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Common.cpp" />
     <ClCompile Include="FileReader.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Scanner.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
