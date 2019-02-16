@@ -1,10 +1,41 @@
 #include "Scanner.h"
 
-Scanner::Scanner(string fileName)
+Scanner::Scanner(string fileName) : lineNumber(1), colNumber(1)
 {
 	fileReader = new FileReader(fileName);
 	inputSymbol = fileReader->GetSymbol();
-	Scan();
+}
+
+int Scanner::GetSymbol()
+{
+	ProcessToken();
+
+	return symbol;
+}
+
+int Scanner::GetNumber()
+{
+	return value;
+}
+
+int Scanner::GetId()
+{
+	return id;
+}
+
+int Scanner::GetLineNumber()
+{
+	return lineNumber;
+}
+
+int Scanner::GetColNumber()
+{
+	return colNumber;
+}
+
+string Scanner::Id2String(int id)
+{
+	return identifierList[id];
 }
 
 void Scanner::ProcessToken()
@@ -150,16 +181,21 @@ void Scanner::ProcessToken()
 
 	case ' ':
 		Next();
+		ProcessToken();
 		return;
 
 	case '\n':
 		Next();
 		buffer = "\\n";
+		lineNumber++;
+		colNumber = 1;
+		ProcessToken();
 		return;
 
 	case '\t':
 		Next();
 		buffer = "\\t";
+		ProcessToken();
 		return;
 
 	default:
@@ -172,14 +208,15 @@ void Scanner::ProcessToken()
 			if (symbol == errorToken)
 			{
 				identifierList.push_back(buffer);
-				symbol = ident;
+				id = identifierList.size() - 1;
+				symbol = identToken;
 			}
 		}
 		else if (isdigit(inputSymbol))
 		{
 			readNumber();
 
-			symbol = number;
+			symbol = numberToken;
 		}
 		
 		break;
@@ -197,6 +234,7 @@ void Scanner::Scan()
 		if (symbol == errorToken)
 		{
 			logger.Error("Syntax error.");
+			error = "Syntax error.";
 			return;
 		}
 
@@ -206,6 +244,7 @@ void Scanner::Scan()
 void Scanner::Next()
 {
 	inputSymbol = fileReader->GetSymbol();
+	colNumber++;
 }
 
 bool Scanner::isSecondSymbolIsEqual()
@@ -292,8 +331,6 @@ void Scanner::readNumber()
 		buffer += inputSymbol;
 		Next();
 	}
-
-	buffer += "\0";
 
 	value = atoi(buffer.c_str());
 }

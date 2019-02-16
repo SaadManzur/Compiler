@@ -34,8 +34,8 @@ enum Tokens
 	doToken = 42,
 	
 	openParenToken = 50,
-	number = 60,
-	ident = 61,
+	numberToken = 60,
+	identToken = 61,
 	
 	semiToken = 70,
 
@@ -59,4 +59,19 @@ enum Tokens
 	beginToken = 150,
 	mainToken = 200,
 	eofToken = 255
+};
+
+class SyntaxException : public std::exception
+{
+private:
+	string message;
+	int lineNumber;
+	int colNumber;
+
+public:
+	SyntaxException();
+	SyntaxException(string message);
+	SyntaxException(int lineNumber, int colNumber, string message = "Syntax error");
+
+	string getMessage();
 };
