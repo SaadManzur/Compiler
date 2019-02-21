@@ -23,3 +23,20 @@ string SyntaxException::getMessage()
 
 	return message;
 }
+
+void BasicBlock::addInstruction(IntermediateCode instr)
+{
+	instructionAddrList.push_back(instr.address);
+}
+
+void BasicBlock::addInstructionInBegining(IntermediateCode instr)
+{
+	instructionAddrList.insert(instructionAddrList.begin(), instr.address);
+}
+
+int BasicBlock::blockSerialNumber = 0;
+
+BasicBlock::BasicBlock()
+{
+	id = BasicBlock::blockSerialNumber++;
+}

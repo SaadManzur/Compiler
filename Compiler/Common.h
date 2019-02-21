@@ -4,8 +4,11 @@
 
 #include <vector>
 #include <map>
+#include <string>
 #include "Logger.h"
 #endif
+
+#define MAXOPERANDLENGTH 3
 
 enum Tokens
 {
@@ -74,4 +77,35 @@ public:
 	SyntaxException(int lineNumber, int colNumber, string message = "Syntax error");
 
 	string getMessage();
+};
+
+class IntermediateCode {
+public:
+	int address;
+	string opcode;
+	string operand[MAXOPERANDLENGTH];
+	int version[MAXOPERANDLENGTH];
+	string operandType[MAXOPERANDLENGTH];
+};
+
+class Result {
+public: 
+	string kind;  //const, var, reg, condition , IntermediateCode
+	int value;   // value if it is a constant
+	int address;  //address if it is a variable/IntermediateCode
+	int regno;    // register number if it is a reg or a condition
+	int cond, fixupLocation;  // if it is a condition
+};
+
+class BasicBlock
+{
+	static int blockSerialNumber;
+public:
+	int id;
+	vector<int> instructionAddrList;
+	vector<BasicBlock *> dominates;
+	vector<BasicBlock *> next;
+	void addInstruction(IntermediateCode instr);
+	void addInstructionInBegining(IntermediateCode instr);
+	BasicBlock();
 };
