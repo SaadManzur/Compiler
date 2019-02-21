@@ -249,13 +249,8 @@ void Parser::ifStatement()
 			joinBlockStack.push(joinBlock);
 			ifBlock->dominates.push_back(joinBlock);
 			phiFlag = 1;
-			try {
-				statSequence();
-			}
-			catch (exception e)
-			{
-			
-			}
+				
+			statSequence();
 
 			restoreVersionTableFromCache();
 
@@ -275,13 +270,8 @@ void Parser::ifStatement()
 				phiFlag = 2;  //indicated code in else basic blog
 
 				Next();
-				try {
-					statSequence();
-				}
-				catch (exception e)
-				{
-
-				}
+				
+				statSequence();
 
 				restoreVersionTableFromCache();
 				

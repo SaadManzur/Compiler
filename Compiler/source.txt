@@ -9,10 +9,10 @@ main var f, g;
     InputNum();
     if f==0 then
 	let x <- 5;
-	let f <- x+1*2;
+	let f <- x+1*2
       else
 	let x <- 2;
-	let f <- 3*x-2*3;
+	let f <- 3*x-2*3
    fi;
   
        while n > 0 do
