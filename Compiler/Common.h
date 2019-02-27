@@ -84,8 +84,9 @@ public:
 	int address;
 	string opcode;
 	string operand[MAXOPERANDLENGTH];
-	int version[MAXOPERANDLENGTH];
+	long long version[MAXOPERANDLENGTH];
 	string operandType[MAXOPERANDLENGTH];
+	int previousSameOp;
 };
 
 class Result {

@@ -260,18 +260,21 @@ void Parser::ifStatement()
 			{
 				
 				instrJumpToFi = createIntermediateCode("bra", Result(), Result());   //Result parameters are dummy
+				thenBlock->addInstruction(instrJumpToFi);
 
 				jumpToElse = currentCodeAddress;
 
 				BasicBlock * elseBlock = new BasicBlock();
 				ifBlock->next.push_back(elseBlock);
 				ifBlock->dominates.push_back(elseBlock);
+
 				currentBlock = elseBlock;
 				phiFlag = 2;  //indicated code in else basic blog
 
 				Next();
 				
 				statSequence();
+
 
 				restoreVersionTableFromCache();
 				
@@ -288,10 +291,14 @@ void Parser::ifStatement()
 				}
 				currentBlock = joinBlock;
 
-				intermediateCodelist[instrJumpToElse.address].operand[1] = "(" + to_string(jumpToElse) + ")";
+			//	intermediateCodelist[instrJumpToElse.address].operand[1] = "(" + to_string(jumpToElse) + ")";
+				intermediateCodelist[instrJumpToElse.address].version[1] = (long long)(ifBlock->next[1]);
+				intermediateCodelist[instrJumpToElse.address].operandType[1] = "JumpAddr";
 				if (instrJumpToFi.opcode.length() > 0)
 				{
-					intermediateCodelist[instrJumpToFi.address].operand[0]= "(" + to_string(currentCodeAddress) + ")";
+					//intermediateCodelist[instrJumpToFi.address].operand[0]= "(" + to_string(currentCodeAddress) + ")";
+					intermediateCodelist[instrJumpToFi.address].version[0] = (long long)(thenBlock->next[0]);
+					intermediateCodelist[instrJumpToFi.address].operandType[0] = "JumpAddr";
 				}
 
 				joinBlockStack.pop();
@@ -351,15 +358,24 @@ void Parser::whileStatement()
 				Next();
 
 				IntermediateCode instrJumpToTop = createIntermediateCode("bra", Result(), Result());  //Result parameters are dummy
+				doBlock->addInstruction(instrJumpToTop);
 
-				intermediateCodelist[instrJumpToTop.address].operand[0] = "(" + to_string(topAddress) + ")";
-
-				intermediateCodelist[instrJumpToOd.address].operand[1] = "("+to_string(currentCodeAddress)+")";
+			//	intermediateCodelist[instrJumpToTop.address].operand[0] = "(" + to_string(topAddress) + ")";
+				intermediateCodelist[instrJumpToTop.address].version[0] = (long long)joinBlock;
+				intermediateCodelist[instrJumpToTop.address].operandType[0] = "JumpAddr";
 
 				BasicBlock *followBlock = new BasicBlock();
+			//	intermediateCodelist[instrJumpToOd.address].operand[1] = "("+to_string(currentCodeAddress)+")";
+				intermediateCodelist[instrJumpToOd.address].version[1] = (long long)followBlock;
+				intermediateCodelist[instrJumpToOd.address].operandType[1] = "JumpAddr";
+
+				doBlock->next.push_back(joinBlock);
+				
 				joinBlock->next.push_back(followBlock);
 				joinBlock->dominates.push_back(followBlock);
 				currentBlock = followBlock;
+
+				
 
 				joinBlockStack.pop();
 				whileStartAddr = oldWhileStartAddr;
@@ -681,13 +697,18 @@ void Parser::printIntermediateCode(IntermediateCode instr)
 {
 	cout << instr.address<<' '<<':'<<' ';
 	cout << instr.opcode;
-	for (int i = 0; i < MAXOPERANDLENGTH && instr.operand[i].length() > 0  ; i++)
+	for (int i = 0; i < MAXOPERANDLENGTH && (instr.operand[i].length() > 0 || instr.operandType->length()>0)  ; i++)
 	{
+		if (instr.operandType[i].compare("JumpAddr") == 0)
+		{
+			BasicBlock * nextBlock = (BasicBlock *)(instr.version[i]);
+			instr.operand[i] = to_string(nextBlock->id);
+		}
 		cout << ' ' << instr.operand[i];
 		if (instr.operandType[i].compare("var") == 0)
 			cout << '_' << instr.version[i];
 	}
-	cout << endl;
+	cout <<endl;
 }
 
 void Parser::Parse()
@@ -972,4 +993,45 @@ void Parser::printCodesByBlocks(BasicBlock *cfgNode)
 		}
 			
 	}
+}
+
+void Parser::outputVCGFile(BasicBlock *cfgNode)
+{
+	if (cfgNode == NULL)
+	{
+		cfgNode = root;
+		visitedNodes.clear();
+		cout<<"graph: { title: \"control flow graph\""<<endl;
+		cout << "manhattan_edges: yes" << endl;
+		cout << "smanhattan_edges: yes" << endl;
+	}
+	cout << "node: {" << endl;
+	cout << "title: \"" << cfgNode->id << "\"" << endl;
+	cout << "label: \"" << cfgNode->id << "[" << endl;
+	visitedNodes.insert(cfgNode);
+	for (int i = 0; i < cfgNode->instructionAddrList.size(); i++)
+	{
+		printIntermediateCode(intermediateCodelist[cfgNode->instructionAddrList[i]]);
+	}
+	cout << "]\"" << endl<<"}";
+	for (int i = 0; i < cfgNode->next.size(); i++)
+	{
+		cout << "edge: { sourcename: \"" << cfgNode->id << "\"  targetname: \"" << cfgNode->next[i]->id;
+		cout << "\" color: blue }" << endl;
+		if (visitedNodes.find(cfgNode->next[i]) == visitedNodes.end())
+		{
+			outputVCGFile(cfgNode->next[i]);
+		}
+
+	}
+}
+
+vector<IntermediateCode>& Parser::getIntermediateCodelist()
+{
+	return intermediateCodelist;
+}
+
+BasicBlock * Parser::getCFGTreeRoot()
+{
+	return root;
 }
