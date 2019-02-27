@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
+    <ClInclude Include="EliminateRedundency.h" />
     <ClInclude Include="FileReader.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Parser.h" />
@@ -123,11 +124,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="EliminateRedundency.cpp" />
     <ClCompile Include="FileReader.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Scanner.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -38,6 +38,30 @@ string Scanner::Id2String(int id)
 	return identifierList[id];
 }
 
+int Scanner::string2Id(string identifier)
+{
+	auto it = identifierHashMap.find(identifier);
+	if (it == identifierHashMap.end())
+		return -1;
+	else
+		return it->second;
+}
+
+int Scanner::getVersion(int id)
+{
+	if (id < versionTable.size())
+		return versionTable[id];
+	else
+		return -1;
+
+}
+
+void Scanner::updateVersion(int id, int version)
+{
+	if (id < versionTable.size())
+		versionTable[id] = version;
+}
+
 void Scanner::ProcessToken()
 {
 	switch (inputSymbol)
@@ -207,9 +231,17 @@ void Scanner::ProcessToken()
 
 			if (symbol == errorToken)
 			{
-				identifierList.push_back(buffer);
-				id = identifierList.size() - 1;
 				symbol = identToken;
+				id = string2Id(buffer);
+				if (id==-1)
+				{
+					identifierList.push_back(buffer);
+					versionTable.push_back(0);      // considering initially all versions are 0 
+					id = identifierList.size() - 1;
+					
+					identifierHashMap.insert(make_pair(buffer, id));
+				}
+				
 			}
 		}
 		else if (isdigit(inputSymbol))
