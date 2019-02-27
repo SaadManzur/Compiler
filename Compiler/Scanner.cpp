@@ -1,6 +1,6 @@
 #include "Scanner.h"
 
-Scanner::Scanner(string fileName)
+Scanner::Scanner(string fileName) : lineNumber(1), colNumber(1)
 {
 	fileReader = new FileReader(fileName);
 	inputSymbol = fileReader->GetSymbol();
@@ -8,8 +8,6 @@ Scanner::Scanner(string fileName)
 
 int Scanner::GetSymbol()
 {
-	Next();
-
 	ProcessToken();
 
 	return symbol;
@@ -23,6 +21,21 @@ int Scanner::GetNumber()
 int Scanner::GetId()
 {
 	return id;
+}
+
+int Scanner::GetLineNumber()
+{
+	return lineNumber;
+}
+
+int Scanner::GetColNumber()
+{
+	return colNumber;
+}
+
+string Scanner::Id2String(int id)
+{
+	return identifierList[id];
 }
 
 void Scanner::ProcessToken()
@@ -168,16 +181,21 @@ void Scanner::ProcessToken()
 
 	case ' ':
 		Next();
+		ProcessToken();
 		return;
 
 	case '\n':
 		Next();
 		buffer = "\\n";
+		lineNumber++;
+		colNumber = 1;
+		ProcessToken();
 		return;
 
 	case '\t':
 		Next();
 		buffer = "\\t";
+		ProcessToken();
 		return;
 
 	default:
@@ -190,6 +208,7 @@ void Scanner::ProcessToken()
 			if (symbol == errorToken)
 			{
 				identifierList.push_back(buffer);
+				id = identifierList.size() - 1;
 				symbol = identToken;
 			}
 		}
@@ -225,6 +244,7 @@ void Scanner::Scan()
 void Scanner::Next()
 {
 	inputSymbol = fileReader->GetSymbol();
+	colNumber++;
 }
 
 bool Scanner::isSecondSymbolIsEqual()

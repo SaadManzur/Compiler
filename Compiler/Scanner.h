@@ -16,14 +16,16 @@ private:
 
 	std::vector<string> identifierList;
 	map<string, int> keywords = {
-		{"then", 41}, {"do", 42}, {"od", 81}, {"fi", 82}, {"else", 90}, {"let", 100}, {"call", 101}, {"if", 102}, {"while", 103},
-		{"return", 104}, {"var", 110}, {"array", 111}, {"function", 112}, {"procedure", 113}, {"main", 200}
+		{"then", 41}, {"do", 42}, {"od", 81}, {"fi", 82}, {"else", 90}, {"let", 100}, {"call", 101}, {"if", 102}, 
+		{"while", 103}, {"return", 104}, {"var", 110}, {"array", 111}, {"function", 112}, {"procedure", 113}, {"main", 200},
 	};
 
 	int symbol;
 	char inputSymbol;
 	int value;
 	int id;
+	int lineNumber;
+	int colNumber;
 	string error;
 	string buffer;
 
@@ -54,6 +56,10 @@ public:
 	int GetNumber();
 	int GetId();
 
+	int GetLineNumber();
+	int GetColNumber();
+
+	string Id2String(int id);
 	void Error(string errorMessage);
 
 };

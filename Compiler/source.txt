@@ -5,9 +5,9 @@ main var f, g;
 
     while n > 0 do
         let f <- f*n;
-        let n <- n-1;
+        let n <- n-1
     od;
 
     let n <- f;
-    OutputNum(f);
+    OutputNum(f)
 }.

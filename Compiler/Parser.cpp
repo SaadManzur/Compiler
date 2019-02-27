@@ -14,7 +14,7 @@ void Parser::relOp()
 	}
 		
 
-	throw new SyntaxException();
+	throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::ident()
@@ -25,7 +25,7 @@ void Parser::ident()
 		return;
 	}
 
-	throw new SyntaxException();
+	throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::number()
@@ -36,22 +36,30 @@ void Parser::number()
 		return;
 	}
 	
-	throw new SyntaxException();
+	throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::designator()
 {
-	ident();
-
-	while (symbol == openBracketToken)
+	try
 	{
-		Next();
-		expression();
+		ident();
 
-		if (symbol == closeBracketToken) Next();
-		else throw new SyntaxException();
+		while (symbol == openBracketToken)
+		{
+			Next();
+			expression();
+
+			if (symbol == closeBracketToken) Next();
+			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+		}
+	}
+	catch (SyntaxException exception)
+	{
+		throw exception;
 	}
 }
+	
 
 void Parser::factor()
 {
@@ -73,7 +81,7 @@ void Parser::factor()
 				expression();
 
 				if (symbol == closeParenToken) Next();
-				else throw new SyntaxException();
+				else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 			}
 			else
 			{
@@ -87,9 +95,6 @@ void Parser::term()
 {
 	factor();
 
-	if (symbol != timesToken && symbol != divToken)
-		throw new SyntaxException();
-
 	while (symbol == timesToken || symbol == divToken)
 	{
 		Next();
@@ -100,9 +105,6 @@ void Parser::term()
 void Parser::expression()
 {
 	term();
-
-	if (symbol != plusToken && symbol != minusToken)
-		throw new SyntaxException();
 
 	while (symbol == plusToken || symbol == minusToken)
 	{
@@ -130,9 +132,9 @@ void Parser::assignment()
 			Next();
 			expression();
 		}
-		else throw new SyntaxException();
+		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	}
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::funcCall()
@@ -158,11 +160,11 @@ void Parser::funcCall()
 			}
 			
 			if (symbol == closeParenToken) Next();
-			else throw new SyntaxException();
+			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 		}
-		else throw new SyntaxException();
+		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	}
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::ifStatement()
@@ -184,11 +186,11 @@ void Parser::ifStatement()
 			}
 
 			if (symbol == fiToken) Next();
-			else throw new SyntaxException();
+			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 		}
-		else throw new SyntaxException();
+		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	}
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::whileStatement()
@@ -202,13 +204,13 @@ void Parser::whileStatement()
 		{
 			Next();
 			statSequence();
-
+			
 			if (symbol == odToken) Next();
-			else throw new SyntaxException();
+			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 		}
-		else throw new SyntaxException();
+		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	}
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::returnStatement()
@@ -217,49 +219,95 @@ void Parser::returnStatement()
 	{
 		Next();
 
-		try 
-		{
-			expression();
-		}
-		catch (SyntaxException e)
-		{
-
-		}
+		expression();
 	}
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::statement()
 {
 	try
 	{
-		assignment();
+		ident();
+
+		string identifierName = scanner->Id2String(scanner->GetId());
+
+		if (identifierName == "OutputNum")
+		{
+			if (symbol == openParenToken)
+			{
+				Next();
+				ident();
+
+				if (symbol == closeParenToken)
+				{
+					OutputNum();
+					Next();
+				}
+			}
+		}
+		else if (identifierName == "InputNum")
+		{
+			Next();
+
+			if (symbol == openParenToken)
+			{
+				Next();
+
+				if (symbol == closeParenToken)
+				{
+					InputNum();
+					Next();
+				}
+			}
+		}
+		else if (identifierName == "OutputNewLine")
+		{
+			Next();
+
+			if (symbol == openParenToken)
+			{
+				Next();
+
+				if (symbol == closeParenToken)
+				{
+					OutputNewLine();
+					Next();
+				}
+			}
+		}
 	}
-	catch (SyntaxException e)
+	catch (SyntaxException exception)
 	{
 		try
 		{
-			funcCall();
+			assignment();
 		}
 		catch (SyntaxException e)
 		{
 			try
 			{
-				ifStatement();
+				funcCall();
 			}
 			catch (SyntaxException e)
 			{
 				try
 				{
-					whileStatement();
+					ifStatement();
 				}
 				catch (SyntaxException e)
 				{
-					returnStatement();
+					try
+					{
+						whileStatement();
+					}
+					catch (SyntaxException e)
+					{
+						returnStatement();
+					}
 				}
 			}
 		}
-		
 	}
 }
 
@@ -269,6 +317,7 @@ void Parser::statSequence()
 	
 	while (symbol == semiToken)
 	{
+		Next();
 		statement();
 	}
 }
@@ -283,17 +332,17 @@ void Parser::typeDecl()
 	{
 		Next();
 		
-		if (symbol != openBracketToken) throw new SyntaxException();
+		if (symbol != openBracketToken) throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 
 		while (symbol == openBracketToken)
 		{
 			number();
 
 			if (symbol == closeBracketToken) Next();
-			else throw new SyntaxException();
+			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 		}
 	}
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::varDecl()
@@ -308,7 +357,7 @@ void Parser::varDecl()
 	}
 
 	if (symbol == semiToken) Next();
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::funcDecl()
@@ -328,10 +377,10 @@ void Parser::funcDecl()
 			funcBody();
 
 			if (symbol == semiToken) Next();
-			else throw new SyntaxException();
+			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 		}
 	}
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::formalParam()
@@ -352,9 +401,9 @@ void Parser::formalParam()
 		}
 
 		if (symbol == closeParenToken) Next();
-		else throw new SyntaxException();
+		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	}
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::funcBody()
@@ -369,9 +418,9 @@ void Parser::funcBody()
 		statSequence();
 
 		if (symbol == endToken) Next();
-		else throw new SyntaxException();
+		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	}
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::computation()
@@ -399,13 +448,28 @@ void Parser::computation()
 			{
 				Next();
 				if (symbol == periodToken) return;
-				else throw new SyntaxException();
+				else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 			}
-			else throw new SyntaxException();
+			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 		}
-		else throw new SyntaxException();
+		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	}
-	else throw new SyntaxException();
+	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+}
+
+void Parser::InputNum()
+{
+	return;
+}
+
+void Parser::OutputNum()
+{
+	return;
+}
+
+void Parser::OutputNewLine()
+{
+	return;
 }
 
 Parser::Parser(Scanner *scanner)
@@ -415,7 +479,14 @@ Parser::Parser(Scanner *scanner)
 
 void Parser::Parse()
 {
-	Next();
+	try
+	{
+		Next();
 
-	computation();
+		computation();
+	}
+	catch (SyntaxException exception)
+	{
+		throw exception;
+	}
 }
