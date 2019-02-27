@@ -84,6 +84,7 @@ public:
 	void commitPhi(BasicBlock *joinBlock);
 	void printCodesByBlocks(BasicBlock *cfgNode=NULL);
 	void outputVCGFile(BasicBlock *cfgNode = NULL);
+	void outputDominatorTree(BasicBlock *cfgNode = NULL);
 	vector<IntermediateCode>& getIntermediateCodelist();
 	BasicBlock *getCFGTreeRoot();
 };

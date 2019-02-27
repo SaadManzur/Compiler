@@ -247,7 +247,7 @@ void Parser::ifStatement()
 
 			BasicBlock *joinBlock = new BasicBlock();
 			joinBlockStack.push(joinBlock);
-			ifBlock->dominates.push_back(joinBlock);
+			
 			phiFlag = 1;
 				
 			statSequence();
@@ -266,7 +266,7 @@ void Parser::ifStatement()
 
 				BasicBlock * elseBlock = new BasicBlock();
 				ifBlock->next.push_back(elseBlock);
-				ifBlock->dominates.push_back(elseBlock);
+				ifBlock->dominates.push_back(elseBlock); 
 
 				currentBlock = elseBlock;
 				phiFlag = 2;  //indicated code in else basic blog
@@ -289,6 +289,7 @@ void Parser::ifStatement()
 					jumpToElse = currentCodeAddress;
 					ifBlock->next.push_back(joinBlock);
 				}
+				ifBlock->dominates.push_back(joinBlock);
 				currentBlock = joinBlock;
 
 			//	intermediateCodelist[instrJumpToElse.address].operand[1] = "(" + to_string(jumpToElse) + ")";
@@ -1023,6 +1024,41 @@ void Parser::outputVCGFile(BasicBlock *cfgNode)
 			outputVCGFile(cfgNode->next[i]);
 		}
 
+	}
+	if (cfgNode == root)
+	{
+	//	cout << "}";
+	}
+}
+
+void Parser::outputDominatorTree(BasicBlock * cfgNode)
+{
+	if (cfgNode == NULL)
+	{
+		cfgNode = root;
+		visitedNodes.clear();
+	//	cout << "graph: { title: \"Dominator Tree\"" << endl;
+	//	cout << "manhattan_edges: yes" << endl;
+	//	cout << "smanhattan_edges: yes" << endl;
+	}
+	cout << "node: {" << endl;
+	cout << "title: \"" << 0<<cfgNode->id << "\"" << endl;
+	cout << "label: \"" << cfgNode->id;
+	cout << "\""  << "}"<<endl;
+	visitedNodes.insert(cfgNode);
+	for (int i = 0; i < cfgNode->dominates.size(); i++)
+	{
+		cout << "edge: { sourcename: \"" <<0<< cfgNode->id << "\"  targetname: \"" <<0<< cfgNode->dominates[i]->id;
+		cout << "\" color: green }" << endl;
+		if (visitedNodes.find(cfgNode->dominates[i]) == visitedNodes.end())
+		{
+			outputDominatorTree(cfgNode->dominates[i]);
+		}
+
+	}
+	if (cfgNode == root)
+	{
+		cout << "}";
 	}
 }
 

@@ -23,6 +23,7 @@ int main()
 		freopen_s(&stream, "cfg.vcg", "w", stdout);
 	//	freopen("cfg.vcg", "w", stdout);
 		parser.outputVCGFile();
+		parser.outputDominatorTree();
 	}
 	catch (SyntaxException exception)
 	{
