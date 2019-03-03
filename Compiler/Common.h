@@ -110,3 +110,5 @@ public:
 	void addInstructionInBegining(IntermediateCode instr);
 	BasicBlock();
 };
+
+void printIntermediateCode(IntermediateCode instr);

@@ -236,7 +236,7 @@ void Scanner::ProcessToken()
 				if (id==-1)
 				{
 					identifierList.push_back(buffer);
-					versionTable.push_back(0);      // considering initially all versions are 0 
+					versionTable.push_back(-1);      // considering initially all versions are -1 
 					id = identifierList.size() - 1;
 					
 					identifierHashMap.insert(make_pair(buffer, id));

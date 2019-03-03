@@ -70,7 +70,7 @@ private:
 	
 public:
 	Parser(Scanner *scanner);
-	void printIntermediateCode(IntermediateCode instr);
+//	void printIntermediateCode(IntermediateCode instr);
 	void Parse();
 	IntermediateCode createIntermediateCode(int op, Result x, Result y);
 	IntermediateCode createIntermediateCode(string opcode, Result x, Result y);

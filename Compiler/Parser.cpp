@@ -694,7 +694,7 @@ Parser::Parser(Scanner *scanner)
 	phiFlag = 0;
 }
 
-void Parser::printIntermediateCode(IntermediateCode instr)
+/*void Parser::printIntermediateCode(IntermediateCode instr)
 {
 	cout << instr.address<<' '<<':'<<' ';
 	cout << instr.opcode;
@@ -710,7 +710,7 @@ void Parser::printIntermediateCode(IntermediateCode instr)
 			cout << '_' << instr.version[i];
 	}
 	cout <<endl;
-}
+}*/
 
 void Parser::Parse()
 {
@@ -763,8 +763,12 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 		instr.operand[0] = string(scanner->Id2String(x.address));
 		instr.version[0] = scanner->getVersion(x.address);
 	}	
-	else if (x.kind.compare("IntermediateCode")==0)
-		instr.operand[0] = "("+to_string(x.address)+")";
+	else if (x.kind.compare("IntermediateCode") == 0)
+	{
+		instr.operand[0] = "(" + to_string(x.address) + ")";
+		instr.version[0] = x.address;
+	}
+		
 
 	if (y.kind.compare("const")==0)
 		instr.operand[1] = to_string(y.value);
@@ -773,8 +777,12 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 		instr.operand[1] = string(scanner->Id2String(y.address));
 		instr.version[1] = scanner->getVersion(y.address);
 	}
-	else if (y.kind.compare("IntermediateCode")==0)
-		instr.operand[1] = "("+to_string(y.address)+")";
+	else if (y.kind.compare("IntermediateCode") == 0)
+	{
+		instr.operand[1] = "(" + to_string(y.address) + ")";
+		instr.version[1] = y.address;
+	}
+		
 
 	instr.operandType[0] = x.kind;
 	instr.operandType[1] = y.kind;
@@ -798,7 +806,11 @@ IntermediateCode Parser::createIntermediateCode(string opcode, Result x, Result 
 		instr.version[0] = scanner->getVersion(x.address);
 	}
 	else if (x.kind.compare("IntermediateCode") == 0)
+	{
 		instr.operand[0] = "(" + to_string(x.address) + ")";
+		instr.version[0] = x.address;
+	}
+		
 
 	if (y.kind.compare("const") == 0)
 		instr.operand[1] = to_string(y.value);
@@ -808,7 +820,11 @@ IntermediateCode Parser::createIntermediateCode(string opcode, Result x, Result 
 		instr.version[1] = scanner->getVersion(y.address);
 	}
 	else if (y.kind.compare("IntermediateCode") == 0)
+	{
 		instr.operand[1] = "(" + to_string(y.address) + ")";
+		instr.version[1] = y.address;
+	}
+		
 
 	instr.operandType[0] = x.kind;
 	instr.operandType[1] = y.kind;
@@ -1028,6 +1044,7 @@ void Parser::outputVCGFile(BasicBlock *cfgNode)
 	if (cfgNode == root)
 	{
 	//	cout << "}";
+		outputDominatorTree();
 	}
 }
 

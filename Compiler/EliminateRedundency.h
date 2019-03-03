@@ -20,16 +20,18 @@ class EliminateRedundency
 	BasicBlock *root;
 	std::set<BasicBlock *> visitedNodes;
 	vector<int> subexpressionPointer;
+	void eliminateCopies(BasicBlock *cfgNode);
 public:
 	EliminateRedundency(Parser *parser);
 	void copyPropagation(BasicBlock *cfgNode =NULL);
-	void eliminateCopies(BasicBlock *cfgNode);
 	void updateVersion(BasicBlock *cfgNode = NULL);
 	void updateVersion(int addr);
 	void CSE(BasicBlock *cfgNode = NULL);
 	void searchCommonSubexpression(int addr);
 	int getPointedInstructionAddr(int addr);
 	void copyCFG(BasicBlock *root);
+	void printCodesByBlocks(BasicBlock *cfgNode = NULL);
+	void outputVCGFile(BasicBlock *cfgNode = NULL);
 	~EliminateRedundency();
 };
 

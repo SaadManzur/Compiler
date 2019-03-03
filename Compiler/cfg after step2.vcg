@@ -12,54 +12,37 @@ label: "0[
 5 : mov 6 f_5 
 6 : mov 7 g_6 
 7 : add b_1 c_2 
-8 : mov (7) a_8 
-9 : add b_1 c_2 
-10 : mov (9) d_10 
-11 : add c_2 b_1 
-12 : add (11) d_10 
-13 : mov (12) e_13 
-14 : cmp a_8 d_10 
+12 : add (7) (7) 
+14 : cmp (7) (7) 
 15 : beq (14) 3 
 ]"
 }edge: { sourcename: "0"  targetname: "1" color: blue }
 node: {
 title: "1"
 label: "1[
-16 : add c_2 b_1 
-17 : add (16) d_10 
-18 : mov (17) e_18 
-20 : mul a_8 d_10 
-21 : mov (20) f_21 
-23 : mul d_10 a_8 
-24 : add (23) 4 
-25 : mov (24) g_25 
+20 : mul (7) (7) 
+24 : add (20) 4 
 27 : mov 5 b_27 
 29 : add c_2 b_27 
-30 : add (29) d_10 
-31 : mov (30) e_31 
+30 : add (29) (7) 
 32 : bra 2  
 ]"
 }edge: { sourcename: "1"  targetname: "2" color: blue }
 node: {
 title: "2"
 label: "2[
-19 : phi e_19 e_31 e_13
-22 : phi f_22 f_21 f_34
-26 : phi g_26 g_25 g_36
+19 : phi e_19 (30) (12)
+22 : phi f_22 (20) (33)
+26 : phi g_26 (24) (33)
 28 : phi b_28 b_27 b_1
-37 : mul a_8 d_10 
-38 : mov (37) f_38 
-39 : div d_10 a_8 
-40 : mov (39) g_40 
+37 : mul (7) (7) 
+39 : div (7) (7) 
 ]"
 }edge: { sourcename: "0"  targetname: "3" color: blue }
 node: {
 title: "3"
 label: "3[
-33 : div a_8 d_10 
-34 : mov (33) f_34 
-35 : div d_10 a_8 
-36 : mov (35) g_36 
+33 : div (7) (7) 
 ]"
 }edge: { sourcename: "3"  targetname: "2" color: blue }
 node: {
