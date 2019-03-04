@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include<unordered_map>
 #include "Logger.h"
 #endif
 
@@ -111,4 +112,16 @@ public:
 	BasicBlock();
 };
 
+class Scope
+{
+public:
+	BasicBlock * root;
+	std::vector<std::string> variableList;
+	std::vector<int> versionTable;
+	std::vector<std::string> arrayList;
+	std::vector< std::vector<int> > arrayDimensions;
+	std::unordered_map<std::string, int> identifierHashMap;
+};
+
 void printIntermediateCode(IntermediateCode instr);
+

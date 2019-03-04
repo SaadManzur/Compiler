@@ -503,11 +503,13 @@ void Parser::statSequence()
 	}
 }
 
-void Parser::typeDecl()
+vector<int> Parser::typeDecl()
 {
+	vector<int> dimension;
 	if (symbol == varToken)
 	{
 		Next();
+		return dimension;
 	}
 	else if (symbol == arrToken)
 	{
@@ -517,24 +519,29 @@ void Parser::typeDecl()
 
 		while (symbol == openBracketToken)
 		{
-			number();
+			Result x=number();
+			dimension.push_back(x.value);
 
 			if (symbol == closeBracketToken) Next();
 			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 		}
+		return dimension;
 	}
 	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
 void Parser::varDecl()
 {
-	typeDecl();
-	ident();
+
+	vector<int> dimension=typeDecl();
+	Result x=ident();
+	updateScope(dimension, x);
 
 	while (symbol == commaToken)
 	{
 		Next();
-		ident();
+		x=ident();
+		updateScope(dimension, x);
 	}
 
 	if (symbol == semiToken) Next();
@@ -545,6 +552,9 @@ void Parser::funcDecl()
 {
 	if (symbol == funcToken || symbol == procToken)
 	{
+		currentScope = new Scope();
+		functions.push_back(currentScope);
+
 		ident();
 
 		if (symbol != semiToken)
@@ -608,6 +618,9 @@ void Parser::computation()
 {
 	if (symbol == mainToken)
 	{
+		global = new Scope();
+		currentScope = global;
+
 		root = new BasicBlock();
 		currentBlock = root;
 
@@ -622,6 +635,8 @@ void Parser::computation()
 		{
 			funcDecl();
 		}
+
+		currentScope = global;
 
 		if (symbol == beginToken)
 		{
@@ -653,6 +668,25 @@ void Parser::OutputNum(Result x)
 	IntermediateCode instr=createIntermediateCode("write", x, Result());   // 2nd parameter is dummy
 	currentBlock->addInstruction(instr);
 	return;
+}
+
+void Parser::updateScope(vector<int>& dimension, Result & x)
+{
+	if (currentScope->identifierHashMap.find(scanner->Id2String(x.address)) != currentScope->identifierHashMap.end())
+	{
+		throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "Redefinition of Identifier");
+	}
+	currentScope->identifierHashMap.insert(make_pair(scanner->Id2String(x.address), x.address));
+	if (dimension.size() == 0)
+	{
+		currentScope->variableList.push_back(scanner->Id2String(x.address));
+		currentScope->versionTable.push_back(-1);   // initial version -1;
+	}
+	else
+	{
+		currentScope->arrayList.push_back(scanner->Id2String(x.address));
+		currentScope->arrayDimensions.push_back(dimension);
+	}
 }
 
 void Parser::OutputNewLine()

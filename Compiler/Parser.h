@@ -37,6 +37,11 @@ private:
 	std::vector<string> cachedIdentifierList;
 	vector<int> cachedVersionTable;
 	unordered_map<string, int> cachedIdentifierHashMap;
+
+	Scope *global;
+	vector<Scope *> functions;
+	Scope *currentScope;
+
 	//indicates whether current statement is in else block or not
 	int phiFlag;   // 1 means ifBlock, 2 elseBlock, 3 whileBlock, 0 none
 	int whileStartAddr; 
@@ -51,7 +56,7 @@ private:
 	void statement();
 	void statSequence();
 
-	void typeDecl();
+	vector<int> typeDecl();
 	void varDecl();
 	void funcDecl();
 	void formalParam();
@@ -61,6 +66,7 @@ private:
 
 	void InputNum();
 	void OutputNum(Result x);
+	void updateScope(vector<int> &dimension, Result &x);
 
 	void OutputNewLine();
 	Result compute(int op, Result x, Result y);
