@@ -47,6 +47,7 @@ int Scanner::string2Id(string identifier)
 		return it->second;
 }
 
+/*
 int Scanner::getVersion(int id)
 {
 	if (id < versionTable.size())
@@ -61,6 +62,7 @@ void Scanner::updateVersion(int id, int version)
 	if (id < versionTable.size())
 		versionTable[id] = version;
 }
+*/
 
 void Scanner::ProcessToken()
 {
@@ -236,7 +238,7 @@ void Scanner::ProcessToken()
 				if (id==-1)
 				{
 					identifierList.push_back(buffer);
-					versionTable.push_back(-1);      // considering initially all versions are -1 
+		//			versionTable.push_back(-1);      // considering initially all versions are -1 
 					id = identifierList.size() - 1;
 					
 					identifierHashMap.insert(make_pair(buffer, id));

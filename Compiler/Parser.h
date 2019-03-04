@@ -34,9 +34,9 @@ private:
 	Result expression();
 	IntermediateCode relation();
 
-	std::vector<string> cachedIdentifierList;
+//	std::vector<string> cachedIdentifierList;
 	vector<int> cachedVersionTable;
-	unordered_map<string, int> cachedIdentifierHashMap;
+//	unordered_map<string, int> cachedIdentifierHashMap;
 
 	Scope *global;
 	vector<Scope *> functions;
@@ -46,7 +46,7 @@ private:
 	int phiFlag;   // 1 means ifBlock, 2 elseBlock, 3 whileBlock, 0 none
 	int whileStartAddr; 
 	
-
+	int getInScopeID(int id);    //get the id number of current identifier token in current scope
 	void assignment();
 	void funcCall();
 	void ifStatement();
@@ -64,28 +64,35 @@ private:
 
 	void computation();
 
+
 	void InputNum();
 	void OutputNum(Result x);
 	void updateScope(vector<int> &dimension, Result &x);
+	Result accessArray(vector<Result> &dimension, Result &x);
+	void determineType(Result &x);  // updateType if array
 
 	void OutputNewLine();
 	Result compute(int op, Result x, Result y);
 	BasicBlock *root;
 	BasicBlock *currentBlock;
 	stack<BasicBlock *> joinBlockStack;
+
+	int getVersion(int id);
+	void updateVersion(int id, int version);
+
+	void storeOldCachedVersion(vector<int> &versionTable);
+	void loadOldCachedVersion(vector<int> &versionTable);
+
+	void cacheVersionTable();
+	void restoreVersionTableFromCache();
 	
 public:
 	Parser(Scanner *scanner);
-//	void printIntermediateCode(IntermediateCode instr);
 	void Parse();
 	IntermediateCode createIntermediateCode(int op, Result x, Result y);
 	IntermediateCode createIntermediateCode(string opcode, Result x, Result y);
 	void printAllIntermediateCode();
 	void updatePhi(Result x);
-	void cacheVersionTable();
-	void storeOldCachedVersion(vector<string> & identifierList, unordered_map<string, int> &identifierHashMap, vector<int> &versionTable);
-	void loadOldCachedVersion(vector<string> & identifierList, unordered_map<string, int> &identifierHashMap, vector<int> &versionTable);
-	void restoreVersionTableFromCache();
 	void renameLoopOccurances(Result x, int newVersion);
 	void commitPhi(BasicBlock *joinBlock);
 	void printCodesByBlocks(BasicBlock *cfgNode=NULL);

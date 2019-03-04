@@ -92,7 +92,7 @@ public:
 
 class Result {
 public: 
-	string kind;  //const, var, reg, condition , IntermediateCode
+	string kind;  //const, var, reg, condition , IntermediateCode, array
 	int value;   // value if it is a constant
 	int address;  //address if it is a variable/IntermediateCode
 	int regno;    // register number if it is a reg or a condition

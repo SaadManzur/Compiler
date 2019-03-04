@@ -30,8 +30,11 @@ private:
 	string error;
 	string buffer;
 
-
 	FileReader *fileReader;
+
+	std::vector<string> identifierList;
+	//	vector<int> versionTable;
+	unordered_map<string, int> identifierHashMap;
 
 	void Next();
 
@@ -51,10 +54,7 @@ private:
 	void Scan();
 
 public:
-	std::vector<string> identifierList;
-	vector<int> versionTable;
 
-	unordered_map<string, int> identifierHashMap;
 
 	Scanner(string fileName);
 
@@ -69,6 +69,6 @@ public:
 	int string2Id(string identifier);
 	void Error(string errorMessage);
 
-	int getVersion(int id);
-	void updateVersion(int id, int version);
+//	int getVersion(int id);
+//	void updateVersion(int id, int version);
 };

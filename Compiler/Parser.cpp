@@ -31,6 +31,7 @@ Result Parser::ident()
 	{
 		x.kind = "var";
 		x.address = scanner->GetId();
+//		x.address = getID();
 		Next();
 		return x;
 	}
@@ -53,17 +54,28 @@ Result Parser::number()
 Result Parser::designator()
 {
 	Result x;
+	vector<Result> dimension;
 	try
 	{
 		x=ident();
+		determineType(x);
 
 		while (symbol == openBracketToken)
 		{
 			Next();
-			expression();
+			Result y=expression();
+			dimension.push_back(y);
 
 			if (symbol == closeBracketToken) Next();
 			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+		}
+		if (x.kind.compare("var") == 0 && dimension.size()>0)
+			throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+		if (x.kind.compare("array") == 0)
+		{
+			if(dimension.size()==0)
+				throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+			x = accessArray(dimension, x);
 		}
 	}
 	catch (SyntaxException exception)
@@ -155,6 +167,16 @@ IntermediateCode Parser::relation()
 	return instr;
 }
 
+int Parser::getInScopeID(int id)
+{
+	string  str= scanner->Id2String(id);
+	auto it=currentScope->identifierHashMap.find(str);
+	if (it == currentScope->identifierHashMap.end())
+		throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "Identifier not found");
+
+	return it->second;
+}
+
 void Parser::assignment()
 {
 	Result x, y;
@@ -169,7 +191,7 @@ void Parser::assignment()
 			x=expression();
 			if (y.kind == "var")
 			{
-				scanner->updateVersion(y.address, currentCodeAddress);
+				updateVersion(y.address, currentCodeAddress);
 			}
 			IntermediateCode instr=createIntermediateCode(becomesToken, x, y);
 			if (y.kind == "var" && !joinBlockStack.empty()) //update phi
@@ -228,12 +250,12 @@ void Parser::ifStatement()
 		ifBlock->next.push_back(thenBlock);
 		ifBlock->dominates.push_back(thenBlock);
 
-		vector<string> oldCachedIdentifierList;
+//		vector<string> oldCachedIdentifierList;
 		vector<int> oldCachedVersionTable;
-		unordered_map<string, int> oldCachedIdentifierHashMap;
+//		unordered_map<string, int> oldCachedIdentifierHashMap;
 		int oldPhiFlag;
 		
-		storeOldCachedVersion(oldCachedIdentifierList, oldCachedIdentifierHashMap, oldCachedVersionTable);
+		storeOldCachedVersion(oldCachedVersionTable);
 		cacheVersionTable();
 		oldPhiFlag = phiFlag;
 
@@ -303,7 +325,7 @@ void Parser::ifStatement()
 				}
 
 				joinBlockStack.pop();
-				loadOldCachedVersion(oldCachedIdentifierList, oldCachedIdentifierHashMap, oldCachedVersionTable);
+				loadOldCachedVersion(oldCachedVersionTable);
 				phiFlag = oldPhiFlag;
 
 				commitPhi(joinBlock);
@@ -335,11 +357,11 @@ void Parser::whileStatement()
 		int oldWhileStartAddr = whileStartAddr;
 		whileStartAddr = currentCodeAddress;
 
-		vector<string> oldCachedIdentifierList;
+	//	vector<string> oldCachedIdentifierList;
 		vector<int> oldCachedVersionTable;
-		unordered_map<string, int> oldCachedIdentifierHashMap;
+	//	unordered_map<string, int> oldCachedIdentifierHashMap;
 
-		storeOldCachedVersion(oldCachedIdentifierList, oldCachedIdentifierHashMap, oldCachedVersionTable);
+		storeOldCachedVersion(oldCachedVersionTable);
 		cacheVersionTable();
 		
 
@@ -383,7 +405,7 @@ void Parser::whileStatement()
 				phiFlag = oldPhiFlag;
 
 				restoreVersionTableFromCache();
-				loadOldCachedVersion(oldCachedIdentifierList, oldCachedIdentifierHashMap, oldCachedVersionTable);
+				loadOldCachedVersion(oldCachedVersionTable);
 
 				commitPhi(joinBlock);
 			} 
@@ -534,7 +556,7 @@ void Parser::varDecl()
 {
 
 	vector<int> dimension=typeDecl();
-	Result x=ident();
+	Result x=ident();          //x.kind info isnt valid here
 	updateScope(dimension, x);
 
 	while (symbol == commaToken)
@@ -676,17 +698,33 @@ void Parser::updateScope(vector<int>& dimension, Result & x)
 	{
 		throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "Redefinition of Identifier");
 	}
-	currentScope->identifierHashMap.insert(make_pair(scanner->Id2String(x.address), x.address));
+	
 	if (dimension.size() == 0)
 	{
 		currentScope->variableList.push_back(scanner->Id2String(x.address));
 		currentScope->versionTable.push_back(-1);   // initial version -1;
+		currentScope->identifierHashMap.insert(make_pair(scanner->Id2String(x.address), currentScope->variableList.size()-1));
 	}
 	else
 	{
 		currentScope->arrayList.push_back(scanner->Id2String(x.address));
 		currentScope->arrayDimensions.push_back(dimension);
+		currentScope->identifierHashMap.insert(make_pair(scanner->Id2String(x.address), currentScope->arrayList.size() - 1));
 	}
+}
+
+Result Parser::accessArray(vector<Result>& dimension, Result & x)
+{
+//	currentScope->arrayList.
+	return Result();
+}
+
+void Parser::determineType(Result & x)
+{
+	string identifier = scanner->Id2String(x.address);
+	x.address = getInScopeID(x.address);
+	if (x.address < currentScope->arrayList.size() && currentScope->arrayList[x.address].compare(identifier) == 0)
+		x.kind == "array";
 }
 
 void Parser::OutputNewLine()
@@ -719,6 +757,21 @@ Result Parser::compute(int op, Result x, Result y)
 		x.address = instr.address;
 	}
 	return x;
+}
+
+int Parser::getVersion(int id)
+{
+	if (id < currentScope->versionTable.size())
+		return currentScope->versionTable[id];
+	throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "version not found\n");
+}
+
+void Parser::updateVersion(int id, int version)
+{
+	if (id < currentScope->versionTable.size())
+		currentScope->versionTable[id] = version;
+	else
+		throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "identifier not found\n");
 }
 
 Parser::Parser(Scanner *scanner)
@@ -795,7 +848,7 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 	else if (x.kind.compare("var")==0)
 	{ 
 		instr.operand[0] = string(scanner->Id2String(x.address));
-		instr.version[0] = scanner->getVersion(x.address);
+		instr.version[0] = getVersion(x.address);
 	}	
 	else if (x.kind.compare("IntermediateCode") == 0)
 	{
@@ -809,7 +862,7 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 	else if (y.kind.compare("var") == 0)
 	{
 		instr.operand[1] = string(scanner->Id2String(y.address));
-		instr.version[1] = scanner->getVersion(y.address);
+		instr.version[1] = getVersion(y.address);
 	}
 	else if (y.kind.compare("IntermediateCode") == 0)
 	{
@@ -837,7 +890,7 @@ IntermediateCode Parser::createIntermediateCode(string opcode, Result x, Result 
 	else if (x.kind.compare("var") == 0)
 	{
 		instr.operand[0] = string(scanner->Id2String(x.address));
-		instr.version[0] = scanner->getVersion(x.address);
+		instr.version[0] = getVersion(x.address);
 	}
 	else if (x.kind.compare("IntermediateCode") == 0)
 	{
@@ -851,7 +904,7 @@ IntermediateCode Parser::createIntermediateCode(string opcode, Result x, Result 
 	else if (y.kind.compare("var") == 0)
 	{
 		instr.operand[1] = string(scanner->Id2String(y.address));
-		instr.version[1] = scanner->getVersion(y.address);
+		instr.version[1] = getVersion(y.address);
 	}
 	else if (y.kind.compare("IntermediateCode") == 0)
 	{
@@ -926,10 +979,10 @@ void Parser::updatePhi(Result x)
 			intermediateCodelist[instr.address].operandType[1] = "var";
 			//add 2nd param
 			instr.operand[2] = varName;
-			instr.version[2] = scanner->getVersion(x.address);
+			instr.version[2] = getVersion(x.address);
 			instr.operandType[2] = "var";
 			intermediateCodelist[instr.address].operand[2] = varName;
-			intermediateCodelist[instr.address].version[2] = scanner->getVersion(x.address);
+			intermediateCodelist[instr.address].version[2] = getVersion(x.address);
 			intermediateCodelist[instr.address].operandType[2] = "var";
 
 			if (phiFlag == 3)  //if while loop
@@ -948,13 +1001,13 @@ void Parser::updatePhi(Result x)
 		if (phiFlag == 1)  //if it is in ifBlock
 		{
 			
-			instr.version[1] = scanner->getVersion(x.address);
-			intermediateCodelist[instr.address].version[1] = scanner->getVersion(x.address);
+			instr.version[1] = getVersion(x.address);
+			intermediateCodelist[instr.address].version[1] = getVersion(x.address);
 		}
 		else if (phiFlag == 2 || phiFlag==3) //if it is a elseBlock or whileBlock
 		{
-			instr.version[2] = scanner->getVersion(x.address);
-			intermediateCodelist[instr.address].version[2] = scanner->getVersion(x.address);
+			instr.version[2] = getVersion(x.address);
+			intermediateCodelist[instr.address].version[2] = getVersion(x.address);
 		}
 		
 	}
@@ -962,30 +1015,30 @@ void Parser::updatePhi(Result x)
 
 void Parser::cacheVersionTable()
 {
-	cachedIdentifierHashMap = scanner->identifierHashMap;
-	cachedIdentifierList = scanner->identifierList;
-	cachedVersionTable = scanner->versionTable;
+//	cachedIdentifierHashMap = scanner->identifierHashMap;
+//	cachedIdentifierList = scanner->identifierList;
+	cachedVersionTable = currentScope->versionTable;
 }
 
-void Parser::storeOldCachedVersion(vector<string>& identifierList, unordered_map<string, int>& identifierHashMap, vector<int>& versionTable)
+void Parser::storeOldCachedVersion(vector<int>& versionTable)
 {
-	identifierList = cachedIdentifierList;
-	identifierHashMap = cachedIdentifierHashMap;
+//	identifierList = cachedIdentifierList;
+//	identifierHashMap = cachedIdentifierHashMap;
 	versionTable = cachedVersionTable;
 }
 
-void Parser::loadOldCachedVersion(vector<string>& identifierList, unordered_map<string, int>& identifierHashMap, vector<int>& versionTable)
+void Parser::loadOldCachedVersion(vector<int>& versionTable)
 {
-	cachedIdentifierList= identifierList;
-	cachedIdentifierHashMap= identifierHashMap;
+//	cachedIdentifierList= identifierList;
+//	cachedIdentifierHashMap= identifierHashMap;
 	cachedVersionTable= versionTable;
 }
 
 void Parser::restoreVersionTableFromCache()
 {
-	scanner->identifierList = cachedIdentifierList;
-	scanner->versionTable = cachedVersionTable;
-	scanner->identifierHashMap = cachedIdentifierHashMap;
+//	scanner->identifierList = cachedIdentifierList;
+	currentScope->versionTable = cachedVersionTable;
+//	scanner->identifierHashMap = cachedIdentifierHashMap;
 }
 
 void Parser::renameLoopOccurances(Result x,int newVersion)
@@ -1009,7 +1062,7 @@ void Parser::commitPhi(BasicBlock * joinBlock)
 		if (instr.opcode.compare("phi") == 0)
 		{
 			int varId = scanner->string2Id(instr.operand[0]);
-			scanner->updateVersion(varId, instr.version[0]);
+			updateVersion(varId, instr.version[0]);
 
 			if (!joinBlockStack.empty()) //update phi in the outer joinBlock
 			{
