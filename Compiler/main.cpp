@@ -18,20 +18,23 @@ int main()
 
 		Parser *parser= new Parser(scanner);
 		parser->Parse();
-		EliminateRedundency step2(parser);
+/**/	EliminateRedundency step2(parser);
 		step2.copyPropagation();
 		step2.updateVersion();
 		step2.CSE();
+		step2.printCodesByBlocks();
+		
 	//	parser->printAllIntermediateCode();
 	//	cout << "..........complete........." << endl << endl;
 	//	parser->printCodesByBlocks();
-		step2.printCodesByBlocks();
+		
 
 		freopen_s(&stream, "cfg.vcg", "w", stdout);
 		parser->outputVCGFile();
 
-		freopen_s(&stream, "cfg after step2.vcg", "w", stdout);
+/* */ 	freopen_s(&stream, "cfg after step2.vcg", "w", stdout);
 		step2.outputVCGFile();
+	
 	}
 	catch (SyntaxException exception)
 	{

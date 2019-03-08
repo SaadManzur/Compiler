@@ -64,11 +64,14 @@ private:
 
 	void computation();
 
+	Result createAndAddCode(int op, Result x, Result y);
+	Result createAndAddCode(string opcode, string x, string y);
+	Result createAndAddCode(string opcode, Result x, Result y);
 
 	void InputNum();
 	void OutputNum(Result x);
 	void updateScope(vector<int> &dimension, Result &x);
-	Result accessArray(vector<Result> &dimension, Result &x);
+	Result accessArray(vector<Result> &dimension, Result x);
 	void determineType(Result &x);  // updateType if array
 
 	void OutputNewLine();
@@ -79,6 +82,7 @@ private:
 
 	int getVersion(int id);
 	void updateVersion(int id, int version);
+	string id2String(int id);
 
 	void storeOldCachedVersion(vector<int> &versionTable);
 	void loadOldCachedVersion(vector<int> &versionTable);

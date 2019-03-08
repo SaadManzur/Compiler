@@ -92,6 +92,12 @@ Result Parser::factor()
 	try
 	{
 		x=designator();
+		if (x.kind.compare("IntermediateCode") == 0)
+		{
+			IntermediateCode instr=createIntermediateCode("load", x, Result());
+			currentBlock->addInstruction(instr);
+			x.address = instr.address;
+		}
 	}
 	catch (SyntaxException e)
 	{
@@ -180,6 +186,7 @@ int Parser::getInScopeID(int id)
 void Parser::assignment()
 {
 	Result x, y;
+	IntermediateCode instr;
 	if (symbol == letToken)
 	{
 		Next();
@@ -192,8 +199,13 @@ void Parser::assignment()
 			if (y.kind == "var")
 			{
 				updateVersion(y.address, currentCodeAddress);
+				instr = createIntermediateCode(becomesToken, x, y);
 			}
-			IntermediateCode instr=createIntermediateCode(becomesToken, x, y);
+			else if (y.kind.compare("IntermediateCode") == 0)
+			{
+				instr = createIntermediateCode("store", x, y);
+			//	y.address = instr.address;
+			}
 			if (y.kind == "var" && !joinBlockStack.empty()) //update phi
 			{
 				updatePhi(y);
@@ -541,6 +553,7 @@ vector<int> Parser::typeDecl()
 
 		while (symbol == openBracketToken)
 		{
+			Next();
 			Result x=number();
 			dimension.push_back(x.value);
 
@@ -678,6 +691,42 @@ void Parser::computation()
 	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
+Result Parser::createAndAddCode(int op, Result x, Result y)
+{
+	IntermediateCode instr = createIntermediateCode(op, x, y);
+	currentBlock->addInstruction(instr);
+	x.address = instr.address;
+	x.kind = "IntermediateCode";
+	return x;
+}
+
+Result Parser::createAndAddCode(string opcode, string x, string y)
+{
+	IntermediateCode instr;
+	instr.opcode = opcode;
+	instr.operand[0] = x;
+	instr.operand[1] = y;
+	instr.operandType[0] = "reg"; //might need to change
+	instr.operandType[1] = "address";  //might need to change
+
+	instr.address = currentCodeAddress++;
+	intermediateCodelist.push_back(instr);
+	currentBlock->addInstruction(instr);
+	Result res;
+	res.address = instr.address;
+	res.kind = "IntermediateCode";;
+	return res;
+}
+
+Result Parser::createAndAddCode(string opcode, Result x, Result y)
+{
+	IntermediateCode instr = createIntermediateCode(opcode, x, y);
+	currentBlock->addInstruction(instr);
+	x.address = instr.address;
+	x.kind = "IntermediateCode";
+	return x;
+}
+
 void Parser::InputNum()
 {
 	IntermediateCode instr = createIntermediateCode("read", Result(), Result());  //Result parameters are dummy
@@ -713,10 +762,25 @@ void Parser::updateScope(vector<int>& dimension, Result & x)
 	}
 }
 
-Result Parser::accessArray(vector<Result>& dimension, Result & x)
+Result Parser::accessArray(vector<Result>& dimension, Result x)
 {
 //	currentScope->arrayList.
-	return Result();
+	int arrayId = x.address;
+	string arrayName = currentScope->arrayList[arrayId];
+	int offset = currentScope->arrayDimensions[arrayId].back();// size() - 1;
+	Result y;
+	y.kind = "const";
+	for (int i = dimension.size() - 2; i >= 0; i--)
+	{
+		y.value = offset;
+		dimension[i] = createAndAddCode(timesToken, dimension[i], y);
+		dimension[i] = createAndAddCode(plusToken, dimension[i + 1], dimension[i]);
+		offset *= currentScope->arrayDimensions[arrayId][i];
+	}
+	y.value = 4;
+	Result m=createAndAddCode(timesToken, dimension[0], y);
+	Result n=createAndAddCode("add", "baseReg", arrayName + "_baseAddr");
+	return createAndAddCode("adda", m, n);
 }
 
 void Parser::determineType(Result & x)
@@ -724,7 +788,7 @@ void Parser::determineType(Result & x)
 	string identifier = scanner->Id2String(x.address);
 	x.address = getInScopeID(x.address);
 	if (x.address < currentScope->arrayList.size() && currentScope->arrayList[x.address].compare(identifier) == 0)
-		x.kind == "array";
+		x.kind = "array";
 }
 
 void Parser::OutputNewLine()
@@ -772,6 +836,12 @@ void Parser::updateVersion(int id, int version)
 		currentScope->versionTable[id] = version;
 	else
 		throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "identifier not found\n");
+}
+
+string Parser::id2String(int id)
+{
+	return currentScope->variableList[id];
+	
 }
 
 Parser::Parser(Scanner *scanner)
@@ -847,7 +917,7 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 		instr.operand[0] = to_string(x.value);
 	else if (x.kind.compare("var")==0)
 	{ 
-		instr.operand[0] = string(scanner->Id2String(x.address));
+		instr.operand[0] = string(id2String(x.address));
 		instr.version[0] = getVersion(x.address);
 	}	
 	else if (x.kind.compare("IntermediateCode") == 0)
@@ -861,7 +931,7 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 		instr.operand[1] = to_string(y.value);
 	else if (y.kind.compare("var") == 0)
 	{
-		instr.operand[1] = string(scanner->Id2String(y.address));
+		instr.operand[1] = string(id2String(y.address));
 		instr.version[1] = getVersion(y.address);
 	}
 	else if (y.kind.compare("IntermediateCode") == 0)
@@ -889,7 +959,7 @@ IntermediateCode Parser::createIntermediateCode(string opcode, Result x, Result 
 		instr.operand[0] = to_string(x.value);
 	else if (x.kind.compare("var") == 0)
 	{
-		instr.operand[0] = string(scanner->Id2String(x.address));
+		instr.operand[0] = string(id2String(x.address));
 		instr.version[0] = getVersion(x.address);
 	}
 	else if (x.kind.compare("IntermediateCode") == 0)
@@ -903,7 +973,7 @@ IntermediateCode Parser::createIntermediateCode(string opcode, Result x, Result 
 		instr.operand[1] = to_string(y.value);
 	else if (y.kind.compare("var") == 0)
 	{
-		instr.operand[1] = string(scanner->Id2String(y.address));
+		instr.operand[1] = string(id2String(y.address));
 		instr.version[1] = getVersion(y.address);
 	}
 	else if (y.kind.compare("IntermediateCode") == 0)
@@ -934,7 +1004,7 @@ void Parser::updatePhi(Result x)
 		return;
 	BasicBlock* joinBlock = joinBlockStack.top();
 
-	string varName = scanner->Id2String(x.address);
+	string varName = id2String(x.address);
 	IntermediateCode instr;
 
 	int i = 0;
@@ -1044,7 +1114,7 @@ void Parser::restoreVersionTableFromCache()
 void Parser::renameLoopOccurances(Result x,int newVersion)
 {
 	int oldVersion = cachedVersionTable[x.address];
-	string varName = scanner->Id2String(x.address);
+	string varName = id2String(x.address);
 	for (int i = whileStartAddr; i < currentCodeAddress-1; i++)  // the -1 is to exclude current phi instruction
 	{
 		for(int j=0 ; j<3 ;j ++)
@@ -1061,7 +1131,8 @@ void Parser::commitPhi(BasicBlock * joinBlock)
 		instr= intermediateCodelist[joinBlock->instructionAddrList[i]];
 		if (instr.opcode.compare("phi") == 0)
 		{
-			int varId = scanner->string2Id(instr.operand[0]);
+		//	int varId = scanner->string2Id(instr.operand[0]);
+			int varId = getInScopeID(scanner->string2Id(instr.operand[0]));
 			updateVersion(varId, instr.version[0]);
 
 			if (!joinBlockStack.empty()) //update phi in the outer joinBlock
