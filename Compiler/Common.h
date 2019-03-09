@@ -83,10 +83,14 @@ class IntermediateCode {
 public:
 	int address;
 	string opcode;
+	int iOpcode;
 	string operand[MAXOPERANDLENGTH];
 	long long version[MAXOPERANDLENGTH];
 	string operandType[MAXOPERANDLENGTH];
 	int previousSameOp;
+
+	string getOperandRepresentation(int index);
+	string getImmediateAddressRepresentation();
 };
 
 class Result {
@@ -103,9 +107,13 @@ class BasicBlock
 	static int blockSerialNumber;
 public:
 	int id;
+	bool liveRangeGenerated = false;
+	bool isLoopHeader = false;
 	vector<int> instructionAddrList;
 	vector<BasicBlock *> dominates;
+	vector<BasicBlock *> dominatedBy;
 	vector<BasicBlock *> next;
+	vector<BasicBlock *> back;
 	void addInstruction(IntermediateCode instr);
 	void addInstructionInBegining(IntermediateCode instr);
 	BasicBlock();

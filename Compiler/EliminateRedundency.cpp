@@ -1,10 +1,5 @@
 #include "EliminateRedundency.h"
 
-
-
-
-
-
 EliminateRedundency::EliminateRedundency(Parser *parser)
 {
 	this->parser = parser;

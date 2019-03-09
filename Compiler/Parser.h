@@ -86,5 +86,6 @@ public:
 	void outputVCGFile(BasicBlock *cfgNode = NULL);
 	void outputDominatorTree(BasicBlock *cfgNode = NULL);
 	vector<IntermediateCode>& getIntermediateCodelist();
+	IntermediateCode getIntermediateCode(int address);
 	BasicBlock *getCFGTreeRoot();
 };

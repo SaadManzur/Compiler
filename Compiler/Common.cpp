@@ -40,3 +40,13 @@ BasicBlock::BasicBlock()
 {
 	id = BasicBlock::blockSerialNumber++;
 }
+
+string IntermediateCode::getOperandRepresentation(int index)
+{
+	return operand[index] + "_" + to_string(version[index]);
+}
+
+string IntermediateCode::getImmediateAddressRepresentation()
+{
+	return "(" + to_string(address) + ")";
+}

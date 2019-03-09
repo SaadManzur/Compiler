@@ -22,6 +22,9 @@
     <Filter Include="Helper">
       <UniqueIdentifier>{af7cf571-20f4-493d-8c60-de1433b56f8b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Register Allocator">
+      <UniqueIdentifier>{81064865-f295-41fe-a0c4-7c3ecff2a642}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Scanner.h">
@@ -41,6 +44,9 @@
     </ClInclude>
     <ClInclude Include="EliminateRedundency.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RegisterAllocator.h">
+      <Filter>Register Allocator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -64,6 +70,9 @@
     </ClCompile>
     <ClCompile Include="EliminateRedundency.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RegisterAllocator.cpp">
+      <Filter>Register Allocator</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
