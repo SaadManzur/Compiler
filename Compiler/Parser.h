@@ -42,13 +42,14 @@ private:
 	vector<Scope *> functions;
 	Scope *currentScope;
 
+	vector<string> functionCalls;
 	//indicates whether current statement is in else block or not
 	int phiFlag;   // 1 means ifBlock, 2 elseBlock, 3 whileBlock, 0 none
 	int whileStartAddr; 
 	
 	int getInScopeID(int id);    //get the id number of current identifier token in current scope
 	void assignment();
-	void funcCall();
+	Result funcCall();
 	void ifStatement();
 	void whileStatement();
 	void returnStatement();
@@ -68,7 +69,7 @@ private:
 	Result createAndAddCode(string opcode, string x, string y);
 	Result createAndAddCode(string opcode, Result x, Result y);
 
-	void InputNum();
+	Result InputNum();
 	void OutputNum(Result x);
 	void updateScope(vector<int> &dimension, Result &x);
 	Result accessArray(vector<Result> &dimension, Result x);
@@ -89,7 +90,9 @@ private:
 
 	void cacheVersionTable();
 	void restoreVersionTableFromCache();
-	
+//	int isFunction(string identifier);
+	int functionNametoScopeId(string func);
+	void secondPass(BasicBlock *cfgNode = NULL);
 public:
 	Parser(Scanner *scanner);
 	void Parse();

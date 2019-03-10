@@ -117,7 +117,7 @@ Result Parser::factor()
 			}
 			else
 			{
-				funcCall();
+				x=funcCall();
 			}
 		}
 	}
@@ -178,8 +178,11 @@ int Parser::getInScopeID(int id)
 	string  str= scanner->Id2String(id);
 	auto it=currentScope->identifierHashMap.find(str);
 	if (it == currentScope->identifierHashMap.end())
-		throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "Identifier not found");
-
+	{
+		it = global->identifierHashMap.find(str);
+		if(it==global->identifierHashMap.end())
+			throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "Identifier not found");
+	}
 	return it->second;
 }
 
@@ -218,34 +221,113 @@ void Parser::assignment()
 	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
-void Parser::funcCall()
+Result Parser::funcCall()
 {
+	Result x;
 	if (symbol == callToken)
 	{
 		Next();
-		ident();
+		Result y=ident();
 
+		string identifierName = scanner->Id2String(y.address);
+
+		if (identifierName == "OutputNum")
+		{
+			if (symbol == openParenToken)
+			{
+				Next();
+				x = expression();
+
+				if (symbol == closeParenToken)
+				{
+					OutputNum(x);
+					Next();
+					return x;
+				}
+				else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+			}
+			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+		}
+		else if (identifierName == "InputNum")
+		{
+			//	Next();
+
+			if (symbol == openParenToken)
+			{
+				Next();
+
+				if (symbol == closeParenToken)
+				{
+					x=InputNum();
+					Next();
+					return x;
+				}
+				else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+			}
+			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+		}
+		else if (identifierName == "OutputNewLine")
+		{
+			//Next();
+
+			if (symbol == openParenToken)
+			{
+				Next();
+
+				if (symbol == closeParenToken)
+				{
+					OutputNewLine();
+					Next();
+					return x;
+				}
+				else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+			}
+			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+		}
+	//	Result x;
+		IntermediateCode instr;
 		if (symbol == openParenToken)
 		{
 			Next();
-
+		/*	if (isfunction(identifierName))
+			{
+				instr = createIntermediateCode("push", Result(), Result());
+				currentBlock->addInstruction(instr);
+			}
+        */
 			if(symbol != closeParenToken)
 			{
-				expression();
+				vector<Result> params;
+				x=expression();
+				params.push_back(x);
+				
 
 				while (symbol == commaToken)
 				{
 					Next();
-					expression();
+					x=expression();
+					params.push_back(x);
 				}
+				for (int i = 0; i < params.size(); i++)
+				{
+					instr = createIntermediateCode("push", params[i], Result());
+					currentBlock->addInstruction(instr);
+				}
+
 			}
-			
+			createAndAddCode("call", identifierName,"");
+			x = createAndAddCode("pop", "", "");
 			if (symbol == closeParenToken) Next();
 			else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 		}
-		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+		else
+		{
+			x=createAndAddCode("call", identifierName, "");
+			//throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+		}
 	}
 	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+	return x;
 }
 
 void Parser::ifStatement()
@@ -364,10 +446,11 @@ void Parser::whileStatement()
 
 		Next();
 		int topAddress = currentCodeAddress;
-		IntermediateCode  instrJumpToOd=relation();
-		int oldPhiFlag = phiFlag;
 		int oldWhileStartAddr = whileStartAddr;
 		whileStartAddr = currentCodeAddress;
+		IntermediateCode  instrJumpToOd=relation();
+		int oldPhiFlag = phiFlag;
+		
 
 	//	vector<string> oldCachedIdentifierList;
 		vector<int> oldCachedVersionTable;
@@ -393,7 +476,7 @@ void Parser::whileStatement()
 				Next();
 
 				IntermediateCode instrJumpToTop = createIntermediateCode("bra", Result(), Result());  //Result parameters are dummy
-				doBlock->addInstruction(instrJumpToTop);
+				currentBlock->addInstruction(instrJumpToTop);
 
 			//	intermediateCodelist[instrJumpToTop.address].operand[0] = "(" + to_string(topAddress) + ")";
 				intermediateCodelist[instrJumpToTop.address].version[0] = (long long)joinBlock;
@@ -404,7 +487,7 @@ void Parser::whileStatement()
 				intermediateCodelist[instrJumpToOd.address].version[1] = (long long)followBlock;
 				intermediateCodelist[instrJumpToOd.address].operandType[1] = "JumpAddr";
 
-				doBlock->next.push_back(joinBlock);
+				currentBlock->next.push_back(joinBlock);
 				
 				joinBlock->next.push_back(followBlock);
 				joinBlock->dominates.push_back(followBlock);
@@ -435,6 +518,7 @@ void Parser::returnStatement()
 		Next();
 
 		expression();
+		createAndAddCode("epilogue", string(), string());
 	}
 	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
@@ -589,8 +673,15 @@ void Parser::funcDecl()
 	{
 		currentScope = new Scope();
 		functions.push_back(currentScope);
+		currentScope->root = new BasicBlock();
+		currentBlock = currentScope->root;
 
-		ident();
+		currentScope->functionType = symbol == funcToken ? 1 : 0;
+
+		Next();
+		Result x=ident();
+
+		currentScope->functionName = scanner->Id2String(x.address);   // add a function add func similar to updatescope
 
 		if (symbol != semiToken)
 		{
@@ -611,18 +702,23 @@ void Parser::funcDecl()
 
 void Parser::formalParam()
 {
+	Result x;
+	vector<int > dim;
 	if (symbol == openParenToken)
 	{
 		Next();
 		
 		if (symbol != closeParenToken)
 		{
-			ident();
-
+			x=ident();
+			updateScope(dim, x);
+			currentScope->numOfArg++;
 			while (symbol == commaToken)
 			{
 				Next();
-				ident();
+				x=ident();
+				updateScope(dim, x);
+				currentScope->numOfArg++;
 			}
 		}
 
@@ -641,8 +737,9 @@ void Parser::funcBody()
 
 	if (symbol == beginToken)
 	{
+		createAndAddCode("prologue", string(), string());
+		Next();
 		statSequence();
-
 		if (symbol == endToken) Next();
 		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	}
@@ -656,7 +753,7 @@ void Parser::computation()
 		global = new Scope();
 		currentScope = global;
 
-		root = new BasicBlock();
+		global->root=root = new BasicBlock();
 		currentBlock = root;
 
 		Next();
@@ -672,6 +769,7 @@ void Parser::computation()
 		}
 
 		currentScope = global;
+		currentBlock = root;
 
 		if (symbol == beginToken)
 		{
@@ -727,11 +825,14 @@ Result Parser::createAndAddCode(string opcode, Result x, Result y)
 	return x;
 }
 
-void Parser::InputNum()
+Result Parser::InputNum()
 {
+	Result x;
 	IntermediateCode instr = createIntermediateCode("read", Result(), Result());  //Result parameters are dummy
 	currentBlock->addInstruction(instr);
-	return;
+	x.address = instr.address;
+	x.kind= "IntermediateCode";
+	return x;
 }
 
 void Parser::OutputNum(Result x)
@@ -876,6 +977,7 @@ void Parser::Parse()
 		Next();
 
 		computation();
+		secondPass();
 	}
 	catch (SyntaxException exception)
 	{
@@ -1111,6 +1213,77 @@ void Parser::restoreVersionTableFromCache()
 //	scanner->identifierHashMap = cachedIdentifierHashMap;
 }
 
+int Parser::functionNametoScopeId(string func)
+{
+	for (int i = 0; i < functions.size(); i++)
+	{
+		if (functions[i]->functionName.compare(func) == 0)
+			return i;
+	}
+	return -1;
+}
+
+void Parser::secondPass(BasicBlock * cfgNode)
+{
+	if (cfgNode == NULL)
+	{
+		cfgNode = global->root;
+		visitedNodes.clear();
+	}
+	visitedNodes.insert(cfgNode);
+
+	IntermediateCode instr;
+	for (int i = 0; i < cfgNode->instructionAddrList.size(); i++)
+	{
+		
+		instr = intermediateCodelist[cfgNode->instructionAddrList[i]];
+		if (instr.opcode.compare("call") == 0)
+		{
+			int id=functionNametoScopeId(instr.operand[0]);
+			if (id == -1)
+				throw SyntaxException("Function Undefined");
+			instr.opcode = "JSR";
+			instr.version[0] = (long long)functions[id]->root;
+			instr.operandType[0]= "JumpAddr";
+			intermediateCodelist[instr.address] = instr;
+
+			functionCalls.push_back("edge: { sourcename: \""+to_string(cfgNode->id)+ "\"  targetname: \"" +
+										to_string(functions[id]->root->id)+"\" color: Red }\n");
+
+			if (functions[id]->functionType==1)
+			{
+				instr = createIntermediateCode("push", Result(), Result());
+				auto it = cfgNode->instructionAddrList.begin();
+				it=cfgNode->instructionAddrList.insert(it+i-functions[id]->numOfArg, instr.address);  // i+functions[id]->numOfArg
+				//instr= createIntermediateCode("pop", Result(), Result());
+				//cfgNode->instructionAddrList.insert(it + functions[id]->numOfArg+1, instr.address);
+
+
+			}
+			else
+			{
+				auto it = cfgNode->instructionAddrList.begin();
+				cfgNode->instructionAddrList.erase(it + i + 1);
+			}
+		}
+	}
+	for (int i = 0; i < cfgNode->next.size(); i++)
+	{
+		if (visitedNodes.find(cfgNode->next[i]) == visitedNodes.end())
+		{
+			secondPass(cfgNode->next[i]);
+		}
+
+	}
+	if (cfgNode == global->root)
+	{
+		for(int i=0;i< functions.size();i++)
+			secondPass(functions[i]->root);
+	}
+}
+
+
+
 void Parser::renameLoopOccurances(Result x,int newVersion)
 {
 	int oldVersion = cachedVersionTable[x.address];
@@ -1199,9 +1372,18 @@ void Parser::outputVCGFile(BasicBlock *cfgNode)
 		}
 
 	}
-	if (cfgNode == root)
+/*	if (cfgNode == root)
 	{
 	//	cout << "}";
+		outputDominatorTree();
+	}
+*/
+	if (cfgNode == global->root)
+	{
+		for (int i = 0; i < functions.size(); i++)
+			outputVCGFile(functions[i]->root);
+		for (int i = 0; i < functionCalls.size(); i++)
+			cout << functionCalls[i];
 		outputDominatorTree();
 	}
 }

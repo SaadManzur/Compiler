@@ -116,6 +116,9 @@ class Scope
 {
 public:
 	BasicBlock * root;
+	string functionName;
+	int functionType;   // 0 for proc and 1 for func
+	int numOfArg=0;  
 	std::vector<std::string> variableList;
 	std::vector<int> versionTable;
 	std::vector<std::string> arrayList;

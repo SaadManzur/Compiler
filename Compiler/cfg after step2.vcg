@@ -4,69 +4,9 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-0 : mov 1 a_0 
-1 : mov 2 b_1 
-2 : mov 3 c_2 
-3 : mov 4 d_3 
-4 : mov 5 e_4 
-5 : mov 6 f_5 
-6 : mov 7 g_6 
-7 : mul 2 7 
-8 : add 1 (7) 
-10 : add (8) (7) 
-11 : mul (10) 4 
-12 : add baseReg ar_baseAddr 
-13 : adda (11) (12) 
-14 : store 5 (13) 
-15 : add b_1 c_2 
-20 : add (15) (15) 
-22 : cmp (15) (15) 
-23 : beq (22) 3 
+1354 : JSR 1  
 ]"
-}edge: { sourcename: "0"  targetname: "1" color: blue }
-node: {
-title: "1"
-label: "1[
-28 : mul (15) (15) 
-32 : add (28) 4 
-35 : mov 5 b_35 
-37 : add c_2 b_35 
-38 : add (37) (15) 
-40 : bra 2  
-]"
-}edge: { sourcename: "1"  targetname: "2" color: blue }
-node: {
-title: "2"
-label: "2[
-27 : phi e_27 (38) (20)
-30 : phi f_30 (28) (41)
-34 : phi g_34 (32) (41)
-36 : phi b_36 b_35 b_1
-51 : adda (11) (12) 
-52 : load (51)  
-54 : mul (52) (15) 
-56 : div (15) (52) 
-]"
-}edge: { sourcename: "0"  targetname: "3" color: blue }
-node: {
-title: "3"
-label: "3[
-41 : div (15) (15) 
-]"
-}edge: { sourcename: "3"  targetname: "2" color: blue }
-node: {
+}node: {
 title: "00"
 label: "0"}
-edge: { sourcename: "00"  targetname: "01" color: green }
-node: {
-title: "01"
-label: "1"}
-edge: { sourcename: "00"  targetname: "03" color: green }
-node: {
-title: "03"
-label: "3"}
-edge: { sourcename: "00"  targetname: "02" color: green }
-node: {
-title: "02"
-label: "2"}
 }
