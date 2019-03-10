@@ -5,13 +5,13 @@
 #include<cstdio>
 #include<cstdlib>
 #include "EliminateRedundency.h"
+#include<cassert>
 using namespace std;
 
 int main()
 {
 	Logger logger;
 	std::FILE *stream;
-
 	try
 	{
 		Scanner *scanner = new Scanner("cell.txt");

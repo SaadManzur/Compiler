@@ -82,8 +82,8 @@ private:
 	BasicBlock *currentBlock;
 	stack<BasicBlock *> joinBlockStack;
 
-	int getVersion(int id);
-	void updateVersion(int id, int version);
+	int getVersion(Result x);
+	void updateVersion(int id, int version, int isGlobal);
 	string getName(Result x);
 
 	void storeOldCachedVersion(vector<int> &versionTable, vector<int>& globalVersionTable);

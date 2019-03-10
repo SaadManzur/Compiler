@@ -2,6 +2,7 @@
 #include "Common.h"
 #include<iostream>
 #include<cstring>
+#include<cassert>
 
 using namespace std;
 
@@ -204,7 +205,7 @@ void Parser::assignment()
 			x=expression();
 			if (y.kind == "var")
 			{
-				updateVersion(y.address, currentCodeAddress);
+				updateVersion(y.address, currentCodeAddress,y.isGlobal);
 				instr = createIntermediateCode(becomesToken, x, y);
 			}
 			else if (y.kind.compare("IntermediateCode") == 0)
@@ -935,17 +936,21 @@ Result Parser::compute(int op, Result x, Result y)
 	return x;
 }
 
-int Parser::getVersion(int id)
+int Parser::getVersion(Result x)
 {
-	if (id < currentScope->versionTable.size())
-		return currentScope->versionTable[id];
+	assert(x.isGlobal != -1);
+	Scope * effectiveScope = x.isGlobal ? global : currentScope;
+	if (x.address < effectiveScope->versionTable.size())
+		return effectiveScope->versionTable[x.address];
 	throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "version not found\n");
 }
 
-void Parser::updateVersion(int id, int version)
+void Parser::updateVersion(int id, int version,int isGlobal)
 {
-	if (id < currentScope->versionTable.size())
-		currentScope->versionTable[id] = version;
+	assert(isGlobal != -1);
+	Scope* effectiveScope = isGlobal ? global : currentScope;
+	if (id < effectiveScope->versionTable.size())
+		effectiveScope->versionTable[id] = version;
 	else
 		throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "identifier not found\n");
 }
@@ -1033,7 +1038,7 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 	else if (x.kind.compare("var")==0)
 	{ 
 		instr.operand[0] = string(getName(x));
-		instr.version[0] = getVersion(x.address);
+		instr.version[0] = getVersion(x);
 	}	
 	else if (x.kind.compare("IntermediateCode") == 0)
 	{
@@ -1047,7 +1052,7 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 	else if (y.kind.compare("var") == 0)
 	{
 		instr.operand[1] = string(getName(y));
-		instr.version[1] = getVersion(y.address);
+		instr.version[1] = getVersion(y);
 	}
 	else if (y.kind.compare("IntermediateCode") == 0)
 	{
@@ -1075,7 +1080,7 @@ IntermediateCode Parser::createIntermediateCode(string opcode, Result x, Result 
 	else if (x.kind.compare("var") == 0)
 	{
 		instr.operand[0] = string(getName(x));
-		instr.version[0] = getVersion(x.address);
+		instr.version[0] = getVersion(x);
 	}
 	else if (x.kind.compare("IntermediateCode") == 0)
 	{
@@ -1089,7 +1094,7 @@ IntermediateCode Parser::createIntermediateCode(string opcode, Result x, Result 
 	else if (y.kind.compare("var") == 0)
 	{
 		instr.operand[1] = string(getName(y));
-		instr.version[1] = getVersion(y.address);
+		instr.version[1] = getVersion(y);
 	}
 	else if (y.kind.compare("IntermediateCode") == 0)
 	{
@@ -1164,10 +1169,10 @@ void Parser::updatePhi(Result x)
 			intermediateCodelist[instr.address].operandType[1] = "var";
 			//add 2nd param
 			instr.operand[2] = varName;
-			instr.version[2] = getVersion(x.address);
+			instr.version[2] = getVersion(x);
 			instr.operandType[2] = "var";
 			intermediateCodelist[instr.address].operand[2] = varName;
-			intermediateCodelist[instr.address].version[2] = getVersion(x.address);
+			intermediateCodelist[instr.address].version[2] = getVersion(x);
 			intermediateCodelist[instr.address].operandType[2] = "var";
 
 			if (phiFlag == 3)  //if while loop
@@ -1186,13 +1191,13 @@ void Parser::updatePhi(Result x)
 		if (phiFlag == 1)  //if it is in ifBlock
 		{
 			
-			instr.version[1] = getVersion(x.address);
-			intermediateCodelist[instr.address].version[1] = getVersion(x.address);
+			instr.version[1] = getVersion(x);
+			intermediateCodelist[instr.address].version[1] = getVersion(x);
 		}
 		else if (phiFlag == 2 || phiFlag==3) //if it is a elseBlock or whileBlock
 		{
-			instr.version[2] = getVersion(x.address);
-			intermediateCodelist[instr.address].version[2] = getVersion(x.address);
+			instr.version[2] = getVersion(x);
+			intermediateCodelist[instr.address].version[2] = getVersion(x);
 		}
 		
 	}
@@ -1324,13 +1329,14 @@ void Parser::commitPhi(BasicBlock * joinBlock)
 		//	int varId = scanner->string2Id(instr.operand[0]);
 			pair<int, int> scopeInfo= getInScopeID(scanner->string2Id(instr.operand[0]));
 			int varId = scopeInfo.first;
-			updateVersion(varId, instr.version[0]);
+			updateVersion(varId, instr.version[0], scopeInfo.second);
 
 			if (!joinBlockStack.empty()) //update phi in the outer joinBlock
 			{
 				Result x;
 				x.kind = "var";
 				x.address = varId;
+				x.isGlobal = scopeInfo.second;
 				updatePhi(x);
 			}
 		}
