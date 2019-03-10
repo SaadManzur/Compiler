@@ -36,6 +36,7 @@ private:
 
 //	std::vector<string> cachedIdentifierList;
 	vector<int> cachedVersionTable;
+	vector<int> cachedGlobalVersionTable;
 //	unordered_map<string, int> cachedIdentifierHashMap;
 
 	Scope *global;
@@ -85,8 +86,8 @@ private:
 	void updateVersion(int id, int version);
 	string getName(Result x);
 
-	void storeOldCachedVersion(vector<int> &versionTable);
-	void loadOldCachedVersion(vector<int> &versionTable);
+	void storeOldCachedVersion(vector<int> &versionTable, vector<int>& globalVersionTable);
+	void loadOldCachedVersion(vector<int> &versionTable, vector<int>& globalVersionTable);
 
 	void cacheVersionTable();
 	void restoreVersionTableFromCache();

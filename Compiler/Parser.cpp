@@ -349,10 +349,11 @@ void Parser::ifStatement()
 
 //		vector<string> oldCachedIdentifierList;
 		vector<int> oldCachedVersionTable;
+		vector<int> oldCachedGlobalVersionTable;
 //		unordered_map<string, int> oldCachedIdentifierHashMap;
 		int oldPhiFlag;
 		
-		storeOldCachedVersion(oldCachedVersionTable);
+		storeOldCachedVersion(oldCachedVersionTable, oldCachedGlobalVersionTable);
 		cacheVersionTable();
 		oldPhiFlag = phiFlag;
 
@@ -422,7 +423,7 @@ void Parser::ifStatement()
 				}
 
 				joinBlockStack.pop();
-				loadOldCachedVersion(oldCachedVersionTable);
+				loadOldCachedVersion(oldCachedVersionTable, oldCachedGlobalVersionTable);
 				phiFlag = oldPhiFlag;
 
 				commitPhi(joinBlock);
@@ -457,9 +458,10 @@ void Parser::whileStatement()
 
 	//	vector<string> oldCachedIdentifierList;
 		vector<int> oldCachedVersionTable;
+		vector<int> oldCachedGlobalVersionTable;
 	//	unordered_map<string, int> oldCachedIdentifierHashMap;
 
-		storeOldCachedVersion(oldCachedVersionTable);
+		storeOldCachedVersion(oldCachedVersionTable, oldCachedGlobalVersionTable);
 		cacheVersionTable();
 		
 
@@ -503,7 +505,7 @@ void Parser::whileStatement()
 				phiFlag = oldPhiFlag;
 
 				restoreVersionTableFromCache();
-				loadOldCachedVersion(oldCachedVersionTable);
+				loadOldCachedVersion(oldCachedVersionTable, oldCachedGlobalVersionTable);
 
 				commitPhi(joinBlock);
 			} 
@@ -1201,26 +1203,30 @@ void Parser::cacheVersionTable()
 //	cachedIdentifierHashMap = scanner->identifierHashMap;
 //	cachedIdentifierList = scanner->identifierList;
 	cachedVersionTable = currentScope->versionTable;
+	cachedGlobalVersionTable = global->versionTable;
 }
 
-void Parser::storeOldCachedVersion(vector<int>& versionTable)
+void Parser::storeOldCachedVersion(vector<int>& versionTable, vector<int>& globalVersionTable)
 {
 //	identifierList = cachedIdentifierList;
 //	identifierHashMap = cachedIdentifierHashMap;
 	versionTable = cachedVersionTable;
+	globalVersionTable = cachedGlobalVersionTable;
 }
 
-void Parser::loadOldCachedVersion(vector<int>& versionTable)
+void Parser::loadOldCachedVersion(vector<int>& versionTable, vector<int>& globalVersionTable)
 {
 //	cachedIdentifierList= identifierList;
 //	cachedIdentifierHashMap= identifierHashMap;
 	cachedVersionTable= versionTable;
+	cachedGlobalVersionTable = globalVersionTable;
 }
 
 void Parser::restoreVersionTableFromCache()
 {
 //	scanner->identifierList = cachedIdentifierList;
 	currentScope->versionTable = cachedVersionTable;
+	global->versionTable = cachedGlobalVersionTable;
 //	scanner->identifierHashMap = cachedIdentifierHashMap;
 }
 
