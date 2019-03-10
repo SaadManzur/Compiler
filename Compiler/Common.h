@@ -97,6 +97,7 @@ public:
 	int address;  //address if it is a variable/IntermediateCode
 	int regno;    // register number if it is a reg or a condition
 	int cond, fixupLocation;  // if it is a condition
+	int isGlobal;  
 };
 
 class BasicBlock

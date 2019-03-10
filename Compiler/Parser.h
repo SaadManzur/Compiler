@@ -47,7 +47,7 @@ private:
 	int phiFlag;   // 1 means ifBlock, 2 elseBlock, 3 whileBlock, 0 none
 	int whileStartAddr; 
 	
-	int getInScopeID(int id);    //get the id number of current identifier token in current scope
+	pair<int,int> getInScopeID(int id);    //get the id number of current identifier token in current scope
 	void assignment();
 	Result funcCall();
 	void ifStatement();
@@ -83,7 +83,7 @@ private:
 
 	int getVersion(int id);
 	void updateVersion(int id, int version);
-	string id2String(int id);
+	string getName(Result x);
 
 	void storeOldCachedVersion(vector<int> &versionTable);
 	void loadOldCachedVersion(vector<int> &versionTable);

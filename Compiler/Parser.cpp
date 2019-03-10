@@ -173,17 +173,20 @@ IntermediateCode Parser::relation()
 	return instr;
 }
 
-int Parser::getInScopeID(int id)
+pair<int,int> Parser::getInScopeID(int id)
 {
+	int isGlobal = 0;
 	string  str= scanner->Id2String(id);
 	auto it=currentScope->identifierHashMap.find(str);
 	if (it == currentScope->identifierHashMap.end())
 	{
 		it = global->identifierHashMap.find(str);
-		if(it==global->identifierHashMap.end())
+		if (it == global->identifierHashMap.end())
 			throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "Identifier not found");
+		else
+			isGlobal = 1;
 	}
-	return it->second;
+	return make_pair(it->second,isGlobal);
 }
 
 void Parser::assignment()
@@ -681,7 +684,7 @@ void Parser::funcDecl()
 		Next();
 		Result x=ident();
 
-		currentScope->functionName = scanner->Id2String(x.address);   // add a function add func similar to updatescope
+		currentScope->functionName = scanner->Id2String(x.address);   // add a function add func similar to update scope
 
 		if (symbol != semiToken)
 		{
@@ -867,8 +870,9 @@ Result Parser::accessArray(vector<Result>& dimension, Result x)
 {
 //	currentScope->arrayList.
 	int arrayId = x.address;
-	string arrayName = currentScope->arrayList[arrayId];
-	int offset = currentScope->arrayDimensions[arrayId].back();// size() - 1;
+	Scope * effectiveScope = x.isGlobal ? global : currentScope;
+	string arrayName = effectiveScope->arrayList[arrayId];
+	int offset = effectiveScope->arrayDimensions[arrayId].back();// size() - 1;
 	Result y;
 	y.kind = "const";
 	for (int i = dimension.size() - 2; i >= 0; i--)
@@ -876,7 +880,7 @@ Result Parser::accessArray(vector<Result>& dimension, Result x)
 		y.value = offset;
 		dimension[i] = createAndAddCode(timesToken, dimension[i], y);
 		dimension[i] = createAndAddCode(plusToken, dimension[i + 1], dimension[i]);
-		offset *= currentScope->arrayDimensions[arrayId][i];
+		offset *= effectiveScope->arrayDimensions[arrayId][i];
 	}
 	y.value = 4;
 	Result m=createAndAddCode(timesToken, dimension[0], y);
@@ -887,9 +891,14 @@ Result Parser::accessArray(vector<Result>& dimension, Result x)
 void Parser::determineType(Result & x)
 {
 	string identifier = scanner->Id2String(x.address);
-	x.address = getInScopeID(x.address);
-	if (x.address < currentScope->arrayList.size() && currentScope->arrayList[x.address].compare(identifier) == 0)
+	pair<int, int> temp= getInScopeID(x.address);
+	x.address = temp.first;
+	x.isGlobal = temp.second;
+	Scope * effectiveScope = x.isGlobal ? global : currentScope;
+	if (x.address < effectiveScope->arrayList.size() && effectiveScope->arrayList[x.address].compare(identifier) == 0)
 		x.kind = "array";
+//	else if (isGlobal && x.address < global->arrayList.size() && global->arrayList[x.address].compare(identifier) == 0)
+//		x.kind = "array";
 }
 
 void Parser::OutputNewLine()
@@ -939,10 +948,12 @@ void Parser::updateVersion(int id, int version)
 		throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber(), "identifier not found\n");
 }
 
-string Parser::id2String(int id)
+string Parser::getName(Result x)
 {
-	return currentScope->variableList[id];
-	
+	if (x.isGlobal)
+		return global->variableList[x.address];
+	else
+		return currentScope->variableList[x.address];
 }
 
 Parser::Parser(Scanner *scanner)
@@ -1019,7 +1030,7 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 		instr.operand[0] = to_string(x.value);
 	else if (x.kind.compare("var")==0)
 	{ 
-		instr.operand[0] = string(id2String(x.address));
+		instr.operand[0] = string(getName(x));
 		instr.version[0] = getVersion(x.address);
 	}	
 	else if (x.kind.compare("IntermediateCode") == 0)
@@ -1033,7 +1044,7 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 		instr.operand[1] = to_string(y.value);
 	else if (y.kind.compare("var") == 0)
 	{
-		instr.operand[1] = string(id2String(y.address));
+		instr.operand[1] = string(getName(y));
 		instr.version[1] = getVersion(y.address);
 	}
 	else if (y.kind.compare("IntermediateCode") == 0)
@@ -1061,7 +1072,7 @@ IntermediateCode Parser::createIntermediateCode(string opcode, Result x, Result 
 		instr.operand[0] = to_string(x.value);
 	else if (x.kind.compare("var") == 0)
 	{
-		instr.operand[0] = string(id2String(x.address));
+		instr.operand[0] = string(getName(x));
 		instr.version[0] = getVersion(x.address);
 	}
 	else if (x.kind.compare("IntermediateCode") == 0)
@@ -1075,7 +1086,7 @@ IntermediateCode Parser::createIntermediateCode(string opcode, Result x, Result 
 		instr.operand[1] = to_string(y.value);
 	else if (y.kind.compare("var") == 0)
 	{
-		instr.operand[1] = string(id2String(y.address));
+		instr.operand[1] = string(getName(y));
 		instr.version[1] = getVersion(y.address);
 	}
 	else if (y.kind.compare("IntermediateCode") == 0)
@@ -1106,7 +1117,7 @@ void Parser::updatePhi(Result x)
 		return;
 	BasicBlock* joinBlock = joinBlockStack.top();
 
-	string varName = id2String(x.address);
+	string varName = getName(x);
 	IntermediateCode instr;
 
 	int i = 0;
@@ -1287,7 +1298,7 @@ void Parser::secondPass(BasicBlock * cfgNode)
 void Parser::renameLoopOccurances(Result x,int newVersion)
 {
 	int oldVersion = cachedVersionTable[x.address];
-	string varName = id2String(x.address);
+	string varName = getName(x);
 	for (int i = whileStartAddr; i < currentCodeAddress-1; i++)  // the -1 is to exclude current phi instruction
 	{
 		for(int j=0 ; j<3 ;j ++)
@@ -1305,7 +1316,8 @@ void Parser::commitPhi(BasicBlock * joinBlock)
 		if (instr.opcode.compare("phi") == 0)
 		{
 		//	int varId = scanner->string2Id(instr.operand[0]);
-			int varId = getInScopeID(scanner->string2Id(instr.operand[0]));
+			pair<int, int> scopeInfo= getInScopeID(scanner->string2Id(instr.operand[0]));
+			int varId = scopeInfo.first;
 			updateVersion(varId, instr.version[0]);
 
 			if (!joinBlockStack.empty()) //update phi in the outer joinBlock

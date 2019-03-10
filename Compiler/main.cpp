@@ -14,7 +14,7 @@ int main()
 
 	try
 	{
-		Scanner *scanner = new Scanner("big.txt");
+		Scanner *scanner = new Scanner("cell.txt");
 
 		Parser *parser= new Parser(scanner);
 		parser->Parse();
