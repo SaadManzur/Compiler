@@ -4,38 +4,68 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-0 : mov 1 f_0 
-1 : mov 3 x_1 
-2 : read
-3 : cmp f_0 0 
-4 : bne (3) 3 
+0 : mov 10 n_0 
+1 : mov 1 f_1 
+2 : mov 3 x_2 
+3 : read
+4 : cmp f_1 0 
+5 : bne (4) 3 
 ]"
 }edge: { sourcename: "0"  targetname: "1" color: blue }
 node: {
 title: "1"
 label: "1[
-5 : mov 5 x_5 
-7 : add x_5 2 
-8 : mov (7) f_8 
-10 : bra 2  
+6 : mov 5 x_6 
+8 : add x_6 2 
+9 : mov (8) f_9 
+11 : bra 2  
 ]"
 }edge: { sourcename: "1"  targetname: "2" color: blue }
 node: {
 title: "2"
 label: "2[
-6 : phi x_6 x_5 x_11
-9 : phi f_9 f_8 f_14
-15 : write f_9  
-16 : writeNL
+7 : phi x_7 x_6 x_12
+10 : phi f_10 f_9 f_15
+]"
+}edge: { sourcename: "2"  targetname: "4" color: blue }
+node: {
+title: "4"
+label: "4[
+26 : phi n_26 n_0 n_25
+23 : phi f_23 f_10 f_22
+16 : cmp n_0 0 
+17 : ble (16) 6 
+]"
+}edge: { sourcename: "4"  targetname: "5" color: blue }
+node: {
+title: "5"
+label: "5[
+18 : mul f_23 n_26 
+19 : add 7 (18) 
+20 : add (19) 6 
+21 : add (20) 1 
+22 : mov (21) f_22 
+24 : sub n_26 1 
+25 : mov (24) n_25 
+27 : bra 4  
+]"
+}edge: { sourcename: "5"  targetname: "4" color: blue }
+edge: { sourcename: "4"  targetname: "6" color: blue }
+node: {
+title: "6"
+label: "6[
+28 : mov f_23 n_28 
+29 : write f_23  
+30 : writeNL
 ]"
 }edge: { sourcename: "0"  targetname: "3" color: blue }
 node: {
 title: "3"
 label: "3[
-11 : mov 2 x_11 
-12 : mul 3 x_11 
-13 : sub (12) 6 
-14 : mov (13) f_14 
+12 : mov 2 x_12 
+13 : mul 3 x_12 
+14 : sub (13) 6 
+15 : mov (14) f_15 
 ]"
 }edge: { sourcename: "3"  targetname: "2" color: blue }
 node: {
@@ -53,3 +83,16 @@ edge: { sourcename: "00"  targetname: "02" color: green }
 node: {
 title: "02"
 label: "2"}
+edge: { sourcename: "02"  targetname: "04" color: green }
+node: {
+title: "04"
+label: "4"}
+edge: { sourcename: "04"  targetname: "05" color: green }
+node: {
+title: "05"
+label: "5"}
+edge: { sourcename: "04"  targetname: "06" color: green }
+node: {
+title: "06"
+label: "6"}
+}

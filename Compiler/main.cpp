@@ -14,7 +14,7 @@ int main()
 
 	try
 	{
-		Scanner *scanner = new Scanner("source3.txt");
+		Scanner *scanner = new Scanner("source.txt");
 
 		Parser parser(scanner);
 		parser.Parse();

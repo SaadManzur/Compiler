@@ -3,6 +3,11 @@
 RegisterAllocator::RegisterAllocator(const Parser &parser)
 {
 	this->parser = parser;
+
+	for (int i = 0; i < 8; i++)
+	{
+		registers[i] = "R" + to_string(i + 1);
+	}
 }
 
 void RegisterAllocator::generateInterferenceGraph(BasicBlock* root)
@@ -147,7 +152,76 @@ void RegisterAllocator::generateEdgeBetween(string variable, set<string> alive)
 	}
 }
 
+void RegisterAllocator::colorGraph()
+{
+	if (interferenceGraph.size() == 0)
+		return;
+	
+	string selectedNode = getNodeWithDegreeLessThanN(NUMBER_OF_REGISTERS);
 
+	set<string> adjacency = removeNodeFromInterferenceGraph(selectedNode);
+
+	colorGraph();
+
+	insertNodeIntoInterferenceGraph(selectedNode, adjacency);
+
+	assignColor(selectedNode);
+}
+
+set<string> RegisterAllocator::removeNodeFromInterferenceGraph(string node)
+{
+	set<string> nodeAdjacency = interferenceGraph[node];
+	
+	interferenceGraph.erase(node);
+
+	for (string element : nodeAdjacency)
+	{
+		interferenceGraph[element].erase(node);
+	}
+
+	return nodeAdjacency;
+}
+
+void RegisterAllocator::insertNodeIntoInterferenceGraph(string node, set<string> adjacency)
+{
+	for (string neighborNode : adjacency)
+	{
+		interferenceGraph[neighborNode].insert(node);
+	}
+
+	interferenceGraph[node] = adjacency;
+}
+
+string RegisterAllocator::getNodeWithDegreeLessThanN(int n)
+{
+	for (auto node : interferenceGraph)
+	{
+		if (interferenceGraph[node.first].size() <= n)
+			return string(node.first);
+	}
+
+	return NULL;
+}
+
+void RegisterAllocator::assignColor(string node)
+{
+	bool registerInUse[8];
+	memset(registerInUse, false, 8);
+
+	for (string adjacentNode : interferenceGraph[node])
+	{
+		registerInUse[assignedColors[adjacentNode]] = true;
+	}
+
+	for (int i = 0; i < 8; i++)
+	{
+		if (!registerInUse[i])
+		{
+			assignedColors[node] = i;
+			return;
+		}
+	}
+}
 
 void RegisterAllocator::fillParentBlocks(BasicBlock *root)
 {
@@ -189,23 +263,6 @@ void RegisterAllocator::fillParentBlocks(BasicBlock *root)
 			dominatedBlock->dominatedBy = currentBlock;
 		}
 	}
-}
-
-void RegisterAllocator::start(BasicBlock *root)
-{
-	fillParentBlocks(root);
-
-	set<string> alive;
-	set<BasicBlock *> visited;
-
-	//printParents(root, visited);
-
-	cout << "-----------Node Traverse Order--------------" << endl;
-	calculateLiveRange(outerMostBlock, alive);
-
-	cout << "Still alive : " << root->alive.size() << endl;
-
-	printInterferenceGraph();
 }
 
 void RegisterAllocator::printParents(BasicBlock *root, set<BasicBlock*> visited)
@@ -262,6 +319,14 @@ void RegisterAllocator::printInterferenceGraph()
 	}
 }
 
+void RegisterAllocator::printAssignedRegisters()
+{
+	for (auto value : assignedColors)
+	{
+		cout << value.first << " " << getAssignedRegister(value.first) << endl;
+	}
+}
+
 bool RegisterAllocator::aExistsInBDominatorTree(BasicBlock *nodeA, BasicBlock *nodeB)
 {
 	if (nodeB == NULL)
@@ -272,4 +337,29 @@ bool RegisterAllocator::aExistsInBDominatorTree(BasicBlock *nodeA, BasicBlock *n
 
 	return aExistsInBDominatorTree(nodeA, nodeB->dominatedBy);
 
+}
+
+void RegisterAllocator::start(BasicBlock *root)
+{
+	fillParentBlocks(root);
+
+	set<string> alive;
+	set<BasicBlock *> visited;
+
+	//printParents(root, visited);
+
+	cout << endl << "-----------Node Traverse Order--------------" << endl;
+	calculateLiveRange(outerMostBlock, alive);
+
+	cout << endl << "Still alive : " << root->alive.size() << endl << endl;
+	printInterferenceGraph();
+
+	cout << endl << "-----------------Coloring-------------------" << endl;
+	colorGraph();
+	printAssignedRegisters();
+}
+
+string RegisterAllocator::getAssignedRegister(string operand)
+{
+	return registers[assignedColors[operand]];
 }
