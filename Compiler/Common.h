@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <set>
 #include "Logger.h"
 #endif
 
@@ -109,9 +110,13 @@ public:
 	int id;
 	bool liveRangeGenerated = false;
 	bool isLoopHeader = false;
+	bool loopPhiProcessed = false;
 	vector<int> instructionAddrList;
+	set<string> alive;
+	set<string> phiAliveFromLeft;
+	set<string> phiAliveFromRight;
 	vector<BasicBlock *> dominates;
-	vector<BasicBlock *> dominatedBy;
+	BasicBlock* dominatedBy;
 	vector<BasicBlock *> next;
 	vector<BasicBlock *> back;
 	void addInstruction(IntermediateCode instr);

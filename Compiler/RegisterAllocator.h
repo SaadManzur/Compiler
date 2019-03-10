@@ -5,6 +5,8 @@
 #include "Common.h"
 #include "Parser.h"
 #include <set>
+#include <algorithm>
+#include <iterator>
 #include <queue>
 #include <iostream>
 #endif
@@ -16,18 +18,19 @@ private:
 
 	bool registerInUse[8];
 	map<string, set<string>> interferenceGraph;
+	map<string, map<string, bool>> adjacencyGraph;
 	vector<Result> aliveValues;
 	Parser parser = NULL;
 
 	void generateInterferenceGraph(BasicBlock *root);
-	set<string> calculateLiveRange(BasicBlock* node, set<string> alive);
-	set<string> calculateLiveRangeForBlock(BasicBlock *node, set<string> alive, bool liveRangeGenerated = true);
+	void calculateLiveRange(BasicBlock* node, set<string> alive);
+	void calculateLiveRangeForBlock(BasicBlock *node, bool liveRangeGenerated = true);
 	void generateEdgeBetween(string variable, set<string> alive);
-	BasicBlock *getOuterMostBlock(BasicBlock *root);
 	
 	void fillParentBlocks(BasicBlock *root);
 	void printParents(BasicBlock* root, set<BasicBlock*> visited);
 	void printInterferenceGraph();
+	bool aExistsInBDominatorTree(BasicBlock *nodeA, BasicBlock *nodeB);
 public:
 	RegisterAllocator(const Parser &parser);
 

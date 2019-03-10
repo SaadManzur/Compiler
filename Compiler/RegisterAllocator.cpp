@@ -10,51 +10,61 @@ void RegisterAllocator::generateInterferenceGraph(BasicBlock* root)
 	fillParentBlocks(root);
 }
 
-set<string> RegisterAllocator::calculateLiveRange(BasicBlock *node, set<string> alive)
+void RegisterAllocator::calculateLiveRange(BasicBlock *node, set<string> alive)
 {	
+	node->alive.insert(alive.begin(), alive.end());
+
 	if (node->isLoopHeader)
 	{
-		for (auto dominatedNode : node->dominates)
+		for (auto backNode : node->back)
 		{
-			if (!dominatedNode->liveRangeGenerated)
+			if (node->dominatedBy != backNode && !backNode->liveRangeGenerated)
 			{
-				alive = calculateLiveRangeForBlock(node, alive, false);
-				alive = calculateLiveRange(getOuterMostBlock(dominatedNode), alive);
+				calculateLiveRangeForBlock(node, false);
 
-				return alive;
+				calculateLiveRange(backNode, node->alive);
+
+				return;
 			}
 		}
 	}
 	else if (!node->isLoopHeader)
 	{
-		for (auto dominatedNode : node->dominates)
+		for (auto childNode : node->next)
 		{
-			if (!dominatedNode->liveRangeGenerated)
+			if (!childNode->liveRangeGenerated && !aExistsInBDominatorTree(childNode, node))
 			{
-				return alive;
+				return;
 			}
 		}
 	}
 
-	if (!node->liveRangeGenerated)
-	{
-		calculateLiveRangeForBlock(node, alive);
+	calculateLiveRangeForBlock(node);
 
+	if (find(node->back.begin(), node->back.end(), node->dominatedBy) == node->back.end())
+	{
+		int i = 0;
 		for (auto parentNode : node->back)
 		{
-			calculateLiveRange(parentNode, alive);
-		}
+			set<string> aliveForParentNode;
+			set<string> setToSubtract = (i == 0) ? node->phiAliveFromRight : node->phiAliveFromLeft;
 
-		for (auto dominatorNode : node->dominatedBy)
-		{
-			calculateLiveRange(dominatorNode, alive);
+			set_difference(node->alive.begin(), node->alive.end(), 
+						setToSubtract.begin(), setToSubtract.end(), 
+						inserter(aliveForParentNode, aliveForParentNode.end()));
+
+			i++;
+
+			calculateLiveRange(parentNode, aliveForParentNode);
 		}
 	}
-
-	return alive;
+	else if(node->dominatedBy != NULL)
+	{
+		calculateLiveRange(node->dominatedBy, node->alive);
+	}
 }
 
-set<string> RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, set<string> alive, bool liveRangeGenerated)
+void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, bool liveRangeGenerated)
 {
 	cout << node->id << endl;
 
@@ -68,52 +78,64 @@ set<string> RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, set<
 		{
 			if (instruction.operandType[0] == "var")
 			{
-				alive.insert(instruction.getOperandRepresentation(0));
+				node->alive.insert(instruction.getOperandRepresentation(0));
 			}
 			else if (instruction.operandType[0] == "IntermediateCode")
 			{
-				alive.insert(instruction.operand[0]);
+				node->alive.insert(instruction.operand[0]);
 			}
 
-			if (alive.find(instruction.getOperandRepresentation(1)) != alive.end())
+			if (node->alive.find(instruction.getOperandRepresentation(1)) != node->alive.end())
 			{
-				alive.erase(instruction.getOperandRepresentation(1));
+				node->alive.erase(instruction.getOperandRepresentation(1));
 			}
 
-			generateEdgeBetween(instruction.getOperandRepresentation(1), alive);
+			generateEdgeBetween(instruction.getOperandRepresentation(1), node->alive);
 		}
 		else if (instruction.opcode == "phi")
 		{
-			if (alive.find(instruction.getOperandRepresentation(0)) != alive.end())
+			if (node->alive.find(instruction.getOperandRepresentation(0)) != node->alive.end())
 			{
-				alive.erase(instruction.getOperandRepresentation(0));
+				node->alive.erase(instruction.getOperandRepresentation(0));
 			}
+			
+			string leftOperand = instruction.getOperandRepresentation(1);
+			string rightOperand = instruction.getOperandRepresentation(2);
 
-			alive.insert(instruction.getOperandRepresentation(1));
-			alive.insert(instruction.getOperandRepresentation(2));
+			node->alive.insert(leftOperand);
+			node->alive.insert(rightOperand);
 
-			generateEdgeBetween(instruction.getOperandRepresentation(0), alive);
+			node->phiAliveFromLeft.insert(leftOperand);
+			node->phiAliveFromRight.insert(rightOperand);
+
+			generateEdgeBetween(instruction.getOperandRepresentation(0), node->alive);
+
+			node->loopPhiProcessed = true;
 		}
 		else
 		{
 			for (int i = 0; i < 3; i++)
 			{
 				if (instruction.operandType[i] == "var")
-					alive.insert(instruction.getOperandRepresentation(i));
+				{
+					node->alive.insert(instruction.getOperandRepresentation(i));
+				}
+				else if (instruction.operandType[i] == "IntermediateCode")
+				{
+					node->alive.insert(instruction.operand[i]);
+				}
 			}
 
-			if (alive.find(instruction.getImmediateAddressRepresentation()) != alive.end())
+			if (node->alive.find(instruction.getImmediateAddressRepresentation()) != node->alive.end())
 			{
-				alive.erase(instruction.getImmediateAddressRepresentation());
+				node->alive.erase(instruction.getImmediateAddressRepresentation());
 
-				generateEdgeBetween(instruction.getImmediateAddressRepresentation(), alive);
+				generateEdgeBetween(instruction.getImmediateAddressRepresentation(), node->alive);
 			}
 		}
 	}
 
 	node->liveRangeGenerated = liveRangeGenerated;
-
-	return alive;
 }
 
 void RegisterAllocator::generateEdgeBetween(string variable, set<string> alive)
@@ -121,6 +143,7 @@ void RegisterAllocator::generateEdgeBetween(string variable, set<string> alive)
 	for (string element : alive)
 	{
 		interferenceGraph[variable].insert(element);
+		interferenceGraph[element].insert(variable);
 	}
 }
 
@@ -147,6 +170,9 @@ void RegisterAllocator::fillParentBlocks(BasicBlock *root)
 		}
 		
 		visited.insert(currentBlock);
+		
+		if (currentBlock->next.size() == 0)
+			outerMostBlock = currentBlock;
 
 		for (auto childBlock : currentBlock->next)
 		{
@@ -160,7 +186,7 @@ void RegisterAllocator::fillParentBlocks(BasicBlock *root)
 
 		for (auto dominatedBlock : currentBlock->dominates)
 		{
-			dominatedBlock->dominatedBy.push_back(currentBlock);
+			dominatedBlock->dominatedBy = currentBlock;
 		}
 	}
 }
@@ -174,7 +200,10 @@ void RegisterAllocator::start(BasicBlock *root)
 
 	//printParents(root, visited);
 
-	calculateLiveRange(getOuterMostBlock(root), alive);
+	cout << "-----------Node Traverse Order--------------" << endl;
+	calculateLiveRange(outerMostBlock, alive);
+
+	cout << "Still alive : " << root->alive.size() << endl;
 
 	printInterferenceGraph();
 }
@@ -203,10 +232,10 @@ void RegisterAllocator::printParents(BasicBlock *root, set<BasicBlock*> visited)
 	}
 
 	cout << "dominated by ";
-	for (auto dominatorBlock : root->dominatedBy)
-	{
-		cout << dominatorBlock->id << " ";
-	}
+	if (root->dominatedBy != NULL)
+		cout << root->dominatedBy->id;
+	else
+		cout << "null";
 
 	cout << endl;
 
@@ -218,6 +247,8 @@ void RegisterAllocator::printParents(BasicBlock *root, set<BasicBlock*> visited)
 
 void RegisterAllocator::printInterferenceGraph()
 {
+	cout << "-----------Interference Graph---------------" << endl;
+
 	for (auto element : interferenceGraph)
 	{
 		cout << element.first << ": ";
@@ -231,20 +262,14 @@ void RegisterAllocator::printInterferenceGraph()
 	}
 }
 
-BasicBlock *RegisterAllocator::getOuterMostBlock(BasicBlock *root)
+bool RegisterAllocator::aExistsInBDominatorTree(BasicBlock *nodeA, BasicBlock *nodeB)
 {
-	if (root == NULL)
-		return NULL;
+	if (nodeB == NULL)
+		return false;
 
-	BasicBlock *outerMostBlock = root;
+	if (nodeA == nodeB->dominatedBy)
+		return true;
 
-	for (auto dominatedBlock : root->dominates)
-	{
-		BasicBlock *outerMostFromDominatedBlock = getOuterMostBlock(dominatedBlock);
+	return aExistsInBDominatorTree(nodeA, nodeB->dominatedBy);
 
-		outerMostBlock = (outerMostFromDominatedBlock != NULL && outerMostFromDominatedBlock->id > outerMostBlock->id) 
-									? outerMostFromDominatedBlock : outerMostBlock;
-	}
-
-	return outerMostBlock;
 }
