@@ -46,8 +46,7 @@ private:
 	vector<string> functionCalls;
 	//indicates whether current statement is in else block or not
 	int phiFlag;   // 1 means ifBlock, 2 elseBlock, 3 whileBlock, 0 none
-	int whileStartAddr; 
-	
+	int whileStartAddr;   
 	pair<int,int> getInScopeID(int id);    //get the id number of current identifier token in current scope
 	void assignment();
 	Result funcCall();
@@ -110,4 +109,6 @@ public:
 	void outputDominatorTree(BasicBlock *cfgNode = NULL);
 	vector<IntermediateCode>& getIntermediateCodelist();
 	BasicBlock *getCFGTreeRoot();
+	pair<Scope*, vector<Scope*> > getScopeInfo();
+	void outputFunctionCalls();
 };

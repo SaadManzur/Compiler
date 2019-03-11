@@ -868,8 +868,9 @@ void Parser::updateScope(vector<int>& dimension, Result & x)
 	
 	if (dimension.size() == 0)
 	{
+		IntermediateCode instr = createIntermediateCode("var", Result(), Result());
 		currentScope->variableList.push_back(scanner->Id2String(x.address));
-		currentScope->versionTable.push_back(-1);   // initial version -1;
+		currentScope->versionTable.push_back(instr.address);   // changed from initial version -1
 		currentScope->identifierHashMap.insert(make_pair(scanner->Id2String(x.address), currentScope->variableList.size()-1));
 	}
 	else
@@ -1483,4 +1484,15 @@ vector<IntermediateCode>& Parser::getIntermediateCodelist()
 BasicBlock * Parser::getCFGTreeRoot()
 {
 	return root;
+}
+
+pair<Scope*, vector<Scope*>> Parser::getScopeInfo()
+{
+	return make_pair(global, functions);
+}
+
+void Parser::outputFunctionCalls()
+{
+	for (int i = 0; i < functionCalls.size(); i++)
+		cout << functionCalls[i];
 }

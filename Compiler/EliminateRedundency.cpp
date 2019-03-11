@@ -9,15 +9,18 @@ EliminateRedundency::EliminateRedundency(Parser *parser)
 {
 	this->parser = parser;
 	this->intermediateCodelist = parser->getIntermediateCodelist();
-	copyCFG(parser->getCFGTreeRoot());
+//	copyCFG(parser->getCFGTreeRoot());
 	subexpressionPointer = vector<int >(NUMOFSUBEXPRESSION, -1);
+	auto scopeInfo = parser->getScopeInfo();
+	global = scopeInfo.first;
+	functions = scopeInfo.second;
 }
 
 void EliminateRedundency::copyPropagation(BasicBlock *cfgNode)
 {
 	if (cfgNode == NULL)
 	{
-		cfgNode = root;
+		cfgNode = global->root;// root;
 		visitedNodes.clear();
 	}
 
@@ -32,6 +35,13 @@ void EliminateRedundency::copyPropagation(BasicBlock *cfgNode)
 			copyPropagation(cfgNode->next[i]);
 		}
 
+	}
+	if (cfgNode == global->root)
+	{
+		for (int i = 0; i < functions.size(); i++)
+		{
+			copyPropagation(functions[i]->root);
+		}
 	}
 }
 
@@ -53,11 +63,44 @@ void EliminateRedundency::eliminateCopies(BasicBlock * cfgNode)
 	}
 }
 
+int EliminateRedundency::checkMatch(int a, int b, int subexprType)
+{
+	IntermediateCode c1 = intermediateCodelist[a];
+	IntermediateCode c2 = intermediateCodelist[b];
+	if (matchOperands(a, 0, b, 0) && matchOperands(a, 1, b, 1))
+		return 1;
+	else if (subexprType == mul || subexprType == add)
+	{
+		if (matchOperands(a, 0, b, 1) && matchOperands(a, 1, b, 0))
+			return 1;
+	}
+	return 0;
+}
+
+int EliminateRedundency::matchOperands(int adr1, int opr1, int adr2, int opr2)
+{
+	IntermediateCode c1 = intermediateCodelist[adr1], c2 = intermediateCodelist[adr2];
+	if (c1.operandType[opr1].compare(c2.operandType[opr2]))
+		return 0;
+	else if (c1.operandType[opr1].compare("const") == 0 && 
+		c1.operand[opr1].compare(c2.operand[opr2]) == 0)
+	{
+		return 1;
+	}
+	else if (c1.operandType[opr1].compare("IntermediateCode") == 0 ||
+		c1.operandType[opr1].compare("var") == 0)
+	{
+		if (c1.version[opr1] == c2.version[opr2])
+			return 1;
+	}
+	return 0;
+}
+
 void EliminateRedundency::updateVersion(BasicBlock * cfgNode)
 {
 	if (cfgNode == NULL)
 	{
-		cfgNode = root;
+		cfgNode = global->root; //root;
 		visitedNodes.clear();
 	}
 
@@ -93,6 +136,13 @@ void EliminateRedundency::updateVersion(BasicBlock * cfgNode)
 		}
 
 	}
+	if (cfgNode == global->root)
+	{
+		for (int i = 0; i < functions.size(); i++)
+		{
+			updateVersion(functions[i]->root);
+		}
+	}
 }
 
 void EliminateRedundency::updateVersion(int addr)
@@ -119,7 +169,7 @@ void EliminateRedundency::CSE(BasicBlock * cfgNode)
 
 	if (cfgNode == NULL)
 	{
-		cfgNode = root;
+		cfgNode = global->root; //root;
 		visitedNodes.clear();
 	}
 	vector<int > oldSubexpressinPointer = subexpressionPointer;
@@ -144,6 +194,14 @@ void EliminateRedundency::CSE(BasicBlock * cfgNode)
 		}
 	}
 	subexpressionPointer = oldSubexpressinPointer;
+
+	if (cfgNode == global->root)
+	{
+		for (int i = 0; i < functions.size(); i++)
+		{
+			CSE(functions[i]->root);
+		}
+	}
 }
 
 void EliminateRedundency::searchCommonSubexpression(int addr)
@@ -167,11 +225,12 @@ void EliminateRedundency::searchCommonSubexpression(int addr)
 	tempAddr = pointedAddr;
 	while (tempAddr != -1)
 	{
-		if ((intermediateCodelist[tempAddr].version[0] == intermediateCodelist[addr].version[0] &&
+	/*	if ((intermediateCodelist[tempAddr].version[0] == intermediateCodelist[addr].version[0] &&
 			intermediateCodelist[tempAddr].version[1] == intermediateCodelist[addr].version[1])
 			|| ( (subexprType==add||subexprType==mul)&& 
 				  intermediateCodelist[tempAddr].version[0] == intermediateCodelist[addr].version[1] &&
 				   intermediateCodelist[tempAddr].version[1] == intermediateCodelist[addr].version[0] ) ) //match found
+	*/	if(checkMatch(addr,tempAddr,subexprType))
 		{
 			intermediateCodelist[addr].opcode = "eliminated";
 			intermediateCodelist[addr].address= getPointedInstructionAddr(tempAddr);
@@ -188,22 +247,22 @@ void EliminateRedundency::searchCommonSubexpression(int addr)
 
 int EliminateRedundency::getPointedInstructionAddr(int addr)
 {
-	if (addr==-1 || intermediateCodelist[addr].address == addr)
+	if (addr<0 || intermediateCodelist[addr].address == addr)
 		return addr;
 	else
 		return intermediateCodelist[addr].address=getPointedInstructionAddr(intermediateCodelist[addr].address);
 }
-
+/*
 void EliminateRedundency::copyCFG(BasicBlock * root)
 {
 	this->root = root;
 }
-
+*/
 void EliminateRedundency::printCodesByBlocks(BasicBlock * cfgNode)
 {
 	if (cfgNode == NULL)
 	{
-		cfgNode = root;
+		cfgNode = global->root; //root;
 		visitedNodes.clear();
 	}
 
@@ -221,13 +280,20 @@ void EliminateRedundency::printCodesByBlocks(BasicBlock * cfgNode)
 		}
 
 	}
+	if (cfgNode == global->root)
+	{
+		for (int i = 0; i < functions.size(); i++)
+		{
+			printCodesByBlocks(functions[i]->root);
+		}
+	}
 }
 
 void EliminateRedundency::outputVCGFile(BasicBlock * cfgNode)
 {
 	if (cfgNode == NULL)
 	{
-		cfgNode = root;
+		cfgNode = global->root;
 		visitedNodes.clear();
 		cout << "graph: { title: \"control flow graph\"" << endl;
 		cout << "manhattan_edges: yes" << endl;
@@ -255,9 +321,19 @@ void EliminateRedundency::outputVCGFile(BasicBlock * cfgNode)
 		}
 
 	}
-	if (cfgNode == root)
+	/*
+	if (cfgNode == global->root)
 	{
 		//	cout << "}";
+		parser->outputDominatorTree();
+	}
+	*/
+	if (cfgNode == global->root)
+	{
+		for (int i = 0; i < functions.size(); i++)
+			outputVCGFile(functions[i]->root);
+		
+		parser->outputFunctionCalls();
 		parser->outputDominatorTree();
 	}
 }

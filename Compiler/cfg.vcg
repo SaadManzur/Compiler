@@ -4,125 +4,87 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-12 : mul 2 4 
-13 : add 3 (12) 
-14 : mul 0 12 
-15 : add (13) (14) 
-16 : mul (15) 4 
-17 : add baseReg a_baseAddr 
-18 : adda (16) (17) 
-19 : store 1 (18) 
-20 : mul 2 4 
-21 : add 2 (20) 
-22 : mul 0 12 
-23 : add (21) (22) 
-24 : mul (23) 4 
-25 : add baseReg a_baseAddr 
-26 : adda (24) (25) 
-27 : store 2 (26) 
-28 : mul 2 4 
-29 : add 3 (28) 
-30 : mul 0 12 
-31 : add (29) (30) 
-32 : mul (31) 4 
-33 : add baseReg a_baseAddr 
-34 : adda (32) (33) 
-35 : load (34)  
-36 : mul 2 4 
-37 : add 2 (36) 
-38 : mul 0 12 
-39 : add (37) (38) 
-40 : mul (39) 4 
-41 : add baseReg a_baseAddr 
-42 : adda (40) (41) 
-43 : load (42)  
-44 : cmp (35) (43) 
-45 : ble (44) 5 
+7 : mul 2 7 
+8 : add 1 (7) 
+9 : mul 3 42 
+10 : add (8) (9) 
+11 : mul (10) 4 
+12 : add baseReg ar_baseAddr 
+13 : adda (11) (12) 
+14 : store 5 (13) 
+15 : add b_1 c_2 
+16 : mov (15) a_16 
+17 : add b_1 c_2 
+18 : mov (17) d_18 
+19 : add c_2 b_1 
+20 : add (19) d_18 
+21 : mov (20) e_21 
+22 : cmp a_16 d_18 
+23 : beq (22) 3 
+]"
+}edge: { sourcename: "0"  targetname: "1" color: blue }
+node: {
+title: "1"
+label: "1[
+24 : add c_2 b_1 
+25 : add (24) d_18 
+26 : mov (25) e_26 
+28 : mul a_16 d_18 
+29 : mov (28) f_29 
+31 : mul d_18 a_16 
+32 : add (31) 4 
+33 : mov (32) g_33 
+35 : mov 5 b_35 
+37 : add c_2 b_35 
+38 : add (37) d_18 
+39 : mov (38) e_39 
+40 : bra 2  
+]"
+}edge: { sourcename: "1"  targetname: "2" color: blue }
+node: {
+title: "2"
+label: "2[
+27 : phi e_27 e_39 e_21
+30 : phi f_30 f_29 f_42
+34 : phi g_34 g_33 g_44
+36 : phi b_36 b_35 b_1
+45 : mul 1 7 
+46 : add 2 (45) 
+47 : mul 2 42 
+48 : add (46) (47) 
+49 : mul (48) 4 
+50 : add baseReg ar_baseAddr 
+51 : adda (49) (50) 
+52 : load (51)  
+53 : mov (52) a_53 
+54 : mul a_53 d_18 
+55 : mov (54) f_55 
+56 : div d_18 a_53 
+57 : mov (56) g_57 
 ]"
 }edge: { sourcename: "0"  targetname: "3" color: blue }
 node: {
 title: "3"
 label: "3[
-77 : push
-53 : JSR 1  
-54 : pop   
-46 : mul 2 4 
-47 : add 1 (46) 
-48 : mul 0 12 
-49 : add (47) (48) 
-50 : mul (49) 4 
-51 : add baseReg a_baseAddr 
-52 : adda (50) (51) 
-55 : store (54) (52) 
-56 : bra 4  
+41 : div a_16 d_18 
+42 : mov (41) f_42 
+43 : div d_18 a_16 
+44 : mov (43) g_44 
 ]"
-}edge: { sourcename: "3"  targetname: "4" color: blue }
-node: {
-title: "4"
-label: "4[
-67 : mul 2 4 
-68 : add 1 (67) 
-69 : mul 0 12 
-70 : add (68) (69) 
-71 : mul (70) 4 
-72 : add baseReg a_baseAddr 
-73 : adda (71) (72) 
-74 : load (73)  
-75 : mov (74) b_75 
-76 : write b_75  
-]"
-}edge: { sourcename: "0"  targetname: "5" color: blue }
-node: {
-title: "5"
-label: "5[
-78 : push
-64 : JSR 2  
-65 : pop   
-57 : mul 2 4 
-58 : add 1 (57) 
-59 : mul 0 12 
-60 : add (58) (59) 
-61 : mul (60) 4 
-62 : add baseReg a_baseAddr 
-63 : adda (61) (62) 
-66 : store (65) (63) 
-]"
-}edge: { sourcename: "5"  targetname: "4" color: blue }
-node: {
-title: "1"
-label: "1[
-0 : prologue   
-1 : write 55  
-2 : mov 2 b_2 
-3 : mov 3 c_3 
-4 : add b_2 c_3 
-5 : epilogue   
-]"
-}node: {
-title: "2"
-label: "2[
-6 : prologue   
-7 : write 35  
-8 : mov 3 b_8 
-9 : mov 4 c_9 
-10 : add b_8 c_9 
-11 : epilogue   
-]"
-}edge: { sourcename: "3"  targetname: "1" color: Red }
-edge: { sourcename: "5"  targetname: "2" color: Red }
+}edge: { sourcename: "3"  targetname: "2" color: blue }
 node: {
 title: "00"
 label: "0"}
+edge: { sourcename: "00"  targetname: "01" color: green }
+node: {
+title: "01"
+label: "1"}
 edge: { sourcename: "00"  targetname: "03" color: green }
 node: {
 title: "03"
 label: "3"}
-edge: { sourcename: "00"  targetname: "05" color: green }
+edge: { sourcename: "00"  targetname: "02" color: green }
 node: {
-title: "05"
-label: "5"}
-edge: { sourcename: "00"  targetname: "04" color: green }
-node: {
-title: "04"
-label: "4"}
+title: "02"
+label: "2"}
 }
