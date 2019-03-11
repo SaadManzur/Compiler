@@ -192,13 +192,15 @@ pair<int,int> Parser::getInScopeID(int id)
 
 void Parser::assignment()
 {
+	int start, end;
 	Result x, y;
 	IntermediateCode instr;
 	if (symbol == letToken)
 	{
 		Next();
+		start = currentBlock->instructionAddrList.size();
 		y=designator();
-
+		end = currentBlock->instructionAddrList.size();
 		if (symbol == becomesToken)
 		{
 			Next();
@@ -210,6 +212,7 @@ void Parser::assignment()
 			}
 			else if (y.kind.compare("IntermediateCode") == 0)
 			{
+				reOrderInstructions(start,end);
 				instr = createIntermediateCode("store", x, y);
 			//	y.address = instr.address;
 			}
@@ -327,6 +330,7 @@ Result Parser::funcCall()
 		else
 		{
 			x=createAndAddCode("call", identifierName, "");
+			x = createAndAddCode("pop", "", "");
 			//throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 		}
 	}
@@ -517,7 +521,7 @@ void Parser::whileStatement()
 	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 }
 
-void Parser::returnStatement()
+int Parser::returnStatement()
 {
 	if (symbol == returnToken)
 	{
@@ -527,10 +531,12 @@ void Parser::returnStatement()
 		createAndAddCode("epilogue", string(), string());
 	}
 	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
+	return 0;
 }
 
-void Parser::statement()
+int Parser::statement()
 {
+	int noReturnStat=1;
 	try
 	{
 		ident();
@@ -608,23 +614,26 @@ void Parser::statement()
 					}
 					catch (SyntaxException e)
 					{
-						returnStatement();
+						noReturnStat=returnStatement();
 					}
 				}
 			}
 		}
 	}
+	return noReturnStat;
 }
 
-void Parser::statSequence()
+int Parser::statSequence()
 {
+	int noReturnStat = 1;
 	statement();
 	
 	while (symbol == semiToken)
 	{
 		Next();
-		statement();
+		noReturnStat=statement();
 	}
+	return noReturnStat;
 }
 
 vector<int> Parser::typeDecl()
@@ -745,7 +754,9 @@ void Parser::funcBody()
 	{
 		createAndAddCode("prologue", string(), string());
 		Next();
-		statSequence();
+		int noReturnStat=statSequence();
+		if(noReturnStat)
+			createAndAddCode("epilogue", string(), string());
 		if (symbol == endToken) Next();
 		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	}
@@ -1147,10 +1158,10 @@ void Parser::updatePhi(Result x)
 
 			//add operand 3
 			instr.operand[2] = varName;
-			instr.version[2] = cachedVersionTable[x.address];
+			instr.version[2] = getCachedVersion(x); //cachedVersionTable[x.address];
 			instr.operandType[2] = "var";
 			intermediateCodelist[instr.address].operand[2] = varName;
-			intermediateCodelist[instr.address].version[2] = cachedVersionTable[x.address];
+			intermediateCodelist[instr.address].version[2] = getCachedVersion(x);// cachedVersionTable[x.address];
 			intermediateCodelist[instr.address].operandType[2] = "var";
 		}
 		else if (phiFlag == 2 || phiFlag==3)  //if it is a elseBlock or whileBlock
@@ -1162,10 +1173,10 @@ void Parser::updatePhi(Result x)
 
 			//add 1st param from cache
 			instr.operand[1] = varName;
-			instr.version[1] = cachedVersionTable[x.address];
+			instr.version[1] = getCachedVersion(x); //cachedVersionTable[x.address];
 			instr.operandType[1] = "var";
 			intermediateCodelist[instr.address].operand[1] = varName;
-			intermediateCodelist[instr.address].version[1] = cachedVersionTable[x.address];
+			intermediateCodelist[instr.address].version[1] = getCachedVersion(x); //cachedVersionTable[x.address];
 			intermediateCodelist[instr.address].operandType[1] = "var";
 			//add 2nd param
 			instr.operand[2] = varName;
@@ -1304,11 +1315,32 @@ void Parser::secondPass(BasicBlock * cfgNode)
 	}
 }
 
+void Parser::reOrderInstructions(int start, int end)
+{
+	int temp;
+	auto it = currentBlock->instructionAddrList.begin() + start;
+	for (int i = start; i < end; i++)
+	{
+		temp = *it;
+		it=currentBlock->instructionAddrList.erase(it);
+		currentBlock->instructionAddrList.push_back(temp);
+	}
+}
+
+int Parser::getCachedVersion(Result x)
+{
+	assert(x.isGlobal != -1);
+	if (x.isGlobal)
+		return cachedGlobalVersionTable[x.address];
+	else
+		return cachedVersionTable[x.address];
+}
+
 
 
 void Parser::renameLoopOccurances(Result x,int newVersion)
 {
-	int oldVersion = cachedVersionTable[x.address];
+	int oldVersion = getCachedVersion(x); //cachedVersionTable[x.address];
 	string varName = getName(x);
 	for (int i = whileStartAddr; i < currentCodeAddress-1; i++)  // the -1 is to exclude current phi instruction
 	{

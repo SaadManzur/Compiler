@@ -53,10 +53,10 @@ private:
 	Result funcCall();
 	void ifStatement();
 	void whileStatement();
-	void returnStatement();
+	int returnStatement();
 
-	void statement();
-	void statSequence();
+	int statement();
+	int statSequence();
 
 	vector<int> typeDecl();
 	void varDecl();
@@ -94,6 +94,8 @@ private:
 //	int isFunction(string identifier);
 	int functionNametoScopeId(string func);
 	void secondPass(BasicBlock *cfgNode = NULL);
+	void reOrderInstructions(int start, int end);
+	int getCachedVersion(Result x);
 public:
 	Parser(Scanner *scanner);
 	void Parse();
