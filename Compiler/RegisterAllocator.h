@@ -11,11 +11,13 @@
 #include <iostream>
 #endif
 
-#define NUMBER_OF_REGISTERS 8
+#define NUMBER_OF_REGISTERS 3
+#define VIRTUAL_REGISTER_OFFSET 100
 
 class RegisterAllocator
 {
 private:
+	int lastVirtualRegisterNumber = VIRTUAL_REGISTER_OFFSET;
 	BasicBlock *outerMostBlock;
 	map<string, set<string>> interferenceGraph;
 	map<int, string> registers;
@@ -30,8 +32,9 @@ private:
 	void colorGraph();
 	set<string> removeNodeFromInterferenceGraph(string node);
 	void insertNodeIntoInterferenceGraph(string node, set<string> adjacency);
-	string getNodeWithDegreeLessThanN(int n);
+	string getNodeWithDegreeLessThanN();
 	void assignColor(string node);
+	string spillRegisterAndGetNode();
 	
 	void fillParentBlocks(BasicBlock *root);
 	void printParents(BasicBlock* root, set<BasicBlock*> visited);

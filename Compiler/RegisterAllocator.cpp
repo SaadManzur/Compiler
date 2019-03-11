@@ -4,7 +4,7 @@ RegisterAllocator::RegisterAllocator(const Parser &parser)
 {
 	this->parser = parser;
 
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < NUMBER_OF_REGISTERS; i++)
 	{
 		registers[i] = "R" + to_string(i + 1);
 	}
@@ -81,6 +81,13 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, bool liveRa
 
 		if (instruction.opcode == "mov")
 		{
+			if (node->alive.find(instruction.getOperandRepresentation(1)) != node->alive.end())
+			{
+				node->alive.erase(instruction.getOperandRepresentation(1));
+			}
+
+			generateEdgeBetween(instruction.getOperandRepresentation(1), node->alive);
+
 			if (instruction.operandType[0] == "var")
 			{
 				node->alive.insert(instruction.getOperandRepresentation(0));
@@ -89,13 +96,6 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, bool liveRa
 			{
 				node->alive.insert(instruction.operand[0]);
 			}
-
-			if (node->alive.find(instruction.getOperandRepresentation(1)) != node->alive.end())
-			{
-				node->alive.erase(instruction.getOperandRepresentation(1));
-			}
-
-			generateEdgeBetween(instruction.getOperandRepresentation(1), node->alive);
 		}
 		else if (instruction.opcode == "phi")
 		{
@@ -103,6 +103,7 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, bool liveRa
 			{
 				node->alive.erase(instruction.getOperandRepresentation(0));
 			}
+			generateEdgeBetween(instruction.getOperandRepresentation(0), node->alive);
 			
 			string leftOperand = instruction.getOperandRepresentation(1);
 			string rightOperand = instruction.getOperandRepresentation(2);
@@ -112,8 +113,6 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, bool liveRa
 
 			node->phiAliveFromLeft.insert(leftOperand);
 			node->phiAliveFromRight.insert(rightOperand);
-
-			generateEdgeBetween(instruction.getOperandRepresentation(0), node->alive);
 
 			node->loopPhiProcessed = true;
 		}
@@ -157,7 +156,10 @@ void RegisterAllocator::colorGraph()
 	if (interferenceGraph.size() == 0)
 		return;
 	
-	string selectedNode = getNodeWithDegreeLessThanN(NUMBER_OF_REGISTERS);
+	string selectedNode = getNodeWithDegreeLessThanN();
+
+	if (selectedNode.empty())
+		selectedNode = spillRegisterAndGetNode();
 
 	set<string> adjacency = removeNodeFromInterferenceGraph(selectedNode);
 
@@ -192,28 +194,28 @@ void RegisterAllocator::insertNodeIntoInterferenceGraph(string node, set<string>
 	interferenceGraph[node] = adjacency;
 }
 
-string RegisterAllocator::getNodeWithDegreeLessThanN(int n)
+string RegisterAllocator::getNodeWithDegreeLessThanN()
 {
 	for (auto node : interferenceGraph)
 	{
-		if (interferenceGraph[node.first].size() <= n)
+		if (interferenceGraph[node.first].size() <= NUMBER_OF_REGISTERS)
 			return string(node.first);
 	}
 
-	return NULL;
+	return string();
 }
 
 void RegisterAllocator::assignColor(string node)
 {
-	bool registerInUse[8];
-	memset(registerInUse, false, 8);
+	bool registerInUse[NUMBER_OF_REGISTERS];
+	memset(registerInUse, false, NUMBER_OF_REGISTERS);
 
 	for (string adjacentNode : interferenceGraph[node])
 	{
 		registerInUse[assignedColors[adjacentNode]] = true;
 	}
 
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < NUMBER_OF_REGISTERS; i++)
 	{
 		if (!registerInUse[i])
 		{
@@ -221,6 +223,27 @@ void RegisterAllocator::assignColor(string node)
 			return;
 		}
 	}
+
+	assignedColors[node] = lastVirtualRegisterNumber++;
+}
+
+string RegisterAllocator::spillRegisterAndGetNode()
+{
+	int minDifference = 9999;
+	string selectedNode;
+
+	for (auto node : interferenceGraph)
+	{
+		int degree = interferenceGraph[node.first].size();
+
+		if (abs(degree - NUMBER_OF_REGISTERS) < minDifference)
+		{
+			selectedNode = string(node.first);
+			minDifference = abs(degree - NUMBER_OF_REGISTERS);
+		}
+	}
+
+	return selectedNode;
 }
 
 void RegisterAllocator::fillParentBlocks(BasicBlock *root)
@@ -305,6 +328,7 @@ void RegisterAllocator::printParents(BasicBlock *root, set<BasicBlock*> visited)
 void RegisterAllocator::printInterferenceGraph()
 {
 	cout << "-----------Interference Graph---------------" << endl;
+	cout << "Total nodes: " << interferenceGraph.size() << endl;
 
 	for (auto element : interferenceGraph)
 	{
@@ -321,6 +345,7 @@ void RegisterAllocator::printInterferenceGraph()
 
 void RegisterAllocator::printAssignedRegisters()
 {
+	cout << "Total assigned nodes : " << assignedColors.size() << endl;
 	for (auto value : assignedColors)
 	{
 		cout << value.first << " " << getAssignedRegister(value.first) << endl;
@@ -361,5 +386,5 @@ void RegisterAllocator::start(BasicBlock *root)
 
 string RegisterAllocator::getAssignedRegister(string operand)
 {
-	return registers[assignedColors[operand]];
+	return "R" + to_string(assignedColors[operand]);
 }
