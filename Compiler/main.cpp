@@ -14,7 +14,7 @@ int main()
 	std::FILE *stream;
 	try
 	{
-		Scanner *scanner = new Scanner("test025.txt");
+		Scanner *scanner = new Scanner("test026.txt");
 
 		Parser *parser= new Parser(scanner);
 		parser->Parse();

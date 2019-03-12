@@ -2,7 +2,7 @@
 #include "common.h"
 #include "Parser.h"
 
-#define NUMOFSUBEXPRESSION 5
+#define NUMOFSUBEXPRESSION 6
 
 enum Subexpression
 {
@@ -10,7 +10,8 @@ enum Subexpression
 	sub,
 	mul,
 	divide,
-	cmp
+	cmp,
+	load
 };
 
 class EliminateRedundency

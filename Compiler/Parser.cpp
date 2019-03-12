@@ -220,6 +220,8 @@ void Parser::assignment()
 			{
 				updatePhi(y);
 			}
+			else if (intermediateCodelist[instr.version[1]].opcode.compare("adda")==0 && !joinBlockStack.empty())
+				insertKill(instr);
 			currentBlock->addInstruction(instr);
 			
 		}
@@ -1335,6 +1337,28 @@ int Parser::getCachedVersion(Result x)
 		return cachedGlobalVersionTable[x.address];
 	else
 		return cachedVersionTable[x.address];
+}
+
+void Parser::insertKill(IntermediateCode instr)
+{
+	BasicBlock * joinBlock;
+	stack<BasicBlock*> backup = joinBlockStack;
+	IntermediateCode instrAdda,temp;
+
+	instrAdda = intermediateCodelist[instr.version[1]];
+	assert(instr.opcode.compare("store") == 0 && instrAdda.opcode.compare("adda") == 0);
+	string arrayName = intermediateCodelist[instrAdda.version[1]].operand[1];
+
+	while (!joinBlockStack.empty())
+	{
+		joinBlock = joinBlockStack.top();
+		joinBlockStack.pop();
+		temp = createIntermediateCode("kill", Result(), Result());
+		temp.operand[0] = arrayName;
+		intermediateCodelist[temp.address].operand[0] = arrayName;
+		joinBlock->addInstruction(temp);
+	}
+	joinBlockStack = backup;
 }
 
 

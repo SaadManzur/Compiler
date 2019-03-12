@@ -95,6 +95,7 @@ private:
 	void secondPass(BasicBlock *cfgNode = NULL);
 	void reOrderInstructions(int start, int end);
 	int getCachedVersion(Result x);
+	void insertKill(IntermediateCode instr);
 public:
 	Parser(Scanner *scanner);
 	void Parse();

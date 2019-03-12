@@ -1,5 +1,5 @@
 #include "EliminateRedundency.h"
-
+#include<cassert>
 
 
 
@@ -67,6 +67,48 @@ int EliminateRedundency::checkMatch(int a, int b, int subexprType)
 {
 	IntermediateCode c1 = intermediateCodelist[a];
 	IntermediateCode c2 = intermediateCodelist[b];
+	if (subexprType == load)
+	{
+		if (c2.opcode.compare("load") == 0)
+		{
+			if (matchOperands(c1.version[0], 0, c2.version[0], 0) &&
+				matchOperands(c1.version[0], 1, c2.version[0], 1))
+			{
+				intermediateCodelist[c1.version[0]].opcode = "eliminated";
+				intermediateCodelist[c1.version[0]].address = getPointedInstructionAddr(c2.version[0]);
+				return 1;
+			}
+			else if (matchOperands(c1.version[0], 0, c2.version[0], 1) &&
+				matchOperands(c1.version[0], 1, c2.version[0], 0))
+			{
+				intermediateCodelist[c1.version[0]].opcode = "eliminated";
+				intermediateCodelist[c1.version[0]].address = getPointedInstructionAddr(c2.version[0]);
+				return 1;
+			}
+			else
+				return 0;
+		}
+		else if (c2.opcode.compare("store") == 0)
+		{
+			IntermediateCode storeAdda = intermediateCodelist[c2.version[1]];
+			string storeArrayName = intermediateCodelist[storeAdda.version[1]].operand[1];
+			IntermediateCode loadAdda = intermediateCodelist[c1.version[0]];
+			string loadArrayName = intermediateCodelist[loadAdda.version[1]].operand[1];
+			if (loadArrayName.compare(storeArrayName) == 0)
+				return -1;
+			return 0;
+		}
+		else if (c2.opcode.compare("kill") == 0)
+		{
+			IntermediateCode loadAdda = intermediateCodelist[c1.version[0]];
+			string loadArrayName = intermediateCodelist[loadAdda.version[1]].operand[1];
+			if (loadArrayName.compare(c2.operand[0]) == 0)
+				return -1;
+			return 0;
+		}
+		assert(0);
+	}
+
 	if (matchOperands(a, 0, b, 0) && matchOperands(a, 1, b, 1))
 		return 1;
 	else if (subexprType == mul || subexprType == add)
@@ -91,6 +133,11 @@ int EliminateRedundency::matchOperands(int adr1, int opr1, int adr2, int opr2)
 		c1.operandType[opr1].compare("var") == 0)
 	{
 		if (c1.version[opr1] == c2.version[opr2])
+			return 1;
+	}
+	else if (c1.operandType[opr1].compare("reg") == 0 || c1.operandType[opr1].compare("address") == 0)
+	{
+		if (c1.operand[opr1].compare(c2.operand[opr2]) == 0)
 			return 1;
 	}
 	return 0;
@@ -218,10 +265,24 @@ void EliminateRedundency::searchCommonSubexpression(int addr)
 		subexprType = divide;
 	else if (opcode.compare("cmp") == 0)
 		subexprType = cmp;
+	else if (opcode.compare("load") == 0)
+		subexprType = load;
+	else if (opcode.compare("store") == 0)
+	{
+		intermediateCodelist[addr].previousSameOp = subexpressionPointer[load];
+		subexpressionPointer[load] = addr;
+		return;
+	}
+	else if (opcode.compare("kill") == 0)
+	{
+		intermediateCodelist[addr].previousSameOp = subexpressionPointer[load];
+		subexpressionPointer[load] = addr;
+		return;
+	}
 	else
 		return;
-	pointedAddr = subexpressionPointer[subexprType];
 
+	pointedAddr = subexpressionPointer[subexprType];
 	tempAddr = pointedAddr;
 	while (tempAddr != -1)
 	{
@@ -230,12 +291,20 @@ void EliminateRedundency::searchCommonSubexpression(int addr)
 			|| ( (subexprType==add||subexprType==mul)&& 
 				  intermediateCodelist[tempAddr].version[0] == intermediateCodelist[addr].version[1] &&
 				   intermediateCodelist[tempAddr].version[1] == intermediateCodelist[addr].version[0] ) ) //match found
-	*/	if(checkMatch(addr,tempAddr,subexprType))
+	*/	
+		int res = checkMatch(addr, tempAddr, subexprType);
+		if (res == 1)
 		{
 			intermediateCodelist[addr].opcode = "eliminated";
-			intermediateCodelist[addr].address= getPointedInstructionAddr(tempAddr);
+			intermediateCodelist[addr].address = getPointedInstructionAddr(tempAddr);
 			break;
 		}
+		else if (res == -1)
+		{
+			tempAddr = -1;
+			break;
+		}
+			
 		tempAddr = intermediateCodelist[tempAddr].previousSameOp;
 	}
 	if (tempAddr == -1) //if no match found then update subexpression pointer
