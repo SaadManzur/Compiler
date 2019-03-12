@@ -4,49 +4,49 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-0 : mov 10 n_0 
-1 : mov 1 f_1 
-2 : mov 3 x_2 
+0 : mov 10 R2 
+1 : mov 1 R106 
+2 : mov 3 R0 
 3 : read
-4 : cmp f_1 0 
-5 : bne (4) 3 
+4 : cmp R106 0 
+5 : bne R0 3 
 ]"
 }edge: { sourcename: "0"  targetname: "1" color: blue }
 node: {
 title: "1"
 label: "1[
-6 : mov 5 x_6 
-8 : add x_6 2 
-9 : mov (8) f_9 
+6 : mov 5 R0 
+8 : add R0 2 
+9 : mov R107 R102 
 11 : bra 2  
 ]"
 }edge: { sourcename: "1"  targetname: "2" color: blue }
 node: {
 title: "2"
 label: "2[
-7 : phi x_7 x_6 x_12
-10 : phi f_10 f_9 f_15
+7 : phi R0 R0 R0
+10 : phi R102 R102 R102
 ]"
 }edge: { sourcename: "2"  targetname: "4" color: blue }
 node: {
 title: "4"
 label: "4[
-26 : phi n_26 n_0 n_25
-23 : phi f_23 f_10 f_22
-16 : cmp n_0 0 
-17 : ble (16) 6 
+26 : phi R0 R2 R1
+23 : phi R0 R102 R101
+16 : cmp R2 0 
+17 : ble R103 6 
 ]"
 }edge: { sourcename: "4"  targetname: "5" color: blue }
 node: {
 title: "5"
 label: "5[
-18 : mul f_23 n_26 
-19 : add 7 (18) 
-20 : add (19) 6 
-21 : add (20) 1 
-22 : mov (21) f_22 
-24 : sub n_26 1 
-25 : mov (24) n_25 
+18 : mul R0 R0 
+19 : add 7 R1 
+20 : add R108 6 
+21 : add R1 1 
+22 : mov R109 R101 
+24 : sub R0 1 
+25 : mov R1 R1 
 27 : bra 4  
 ]"
 }edge: { sourcename: "5"  targetname: "4" color: blue }
@@ -54,18 +54,18 @@ edge: { sourcename: "4"  targetname: "6" color: blue }
 node: {
 title: "6"
 label: "6[
-28 : mov f_23 n_28 
-29 : write f_23  
+28 : mov R0 R0 
+29 : write R0  
 30 : writeNL
 ]"
 }edge: { sourcename: "0"  targetname: "3" color: blue }
 node: {
 title: "3"
 label: "3[
-12 : mov 2 x_12 
-13 : mul 3 x_12 
-14 : sub (13) 6 
-15 : mov (14) f_15 
+12 : mov 2 R0 
+13 : mul 3 R0 
+14 : sub R105 6 
+15 : mov R104 R102 
 ]"
 }edge: { sourcename: "3"  targetname: "2" color: blue }
 node: {
@@ -95,4 +95,3 @@ edge: { sourcename: "04"  targetname: "06" color: green }
 node: {
 title: "06"
 label: "6"}
-}

@@ -706,9 +706,31 @@ void Parser::printIntermediateCode(IntermediateCode instr)
 			BasicBlock * nextBlock = (BasicBlock *)(instr.version[i]);
 			instr.operand[i] = to_string(nextBlock->id);
 		}
-		cout << ' ' << instr.operand[i];
-		if (instr.operandType[i].compare("var") == 0)
-			cout << '_' << instr.version[i];
+
+		if (assignedRegisters.empty())
+		{
+			cout << ' ' << instr.operand[i];
+			if (instr.operandType[i].compare("var") == 0)
+				cout << '_' << instr.version[i];
+		}
+		else
+		{
+			string operand = instr.operand[i];
+
+			if (instr.operandType[i].compare("var") == 0)
+			{
+				operand += "_" + to_string(instr.version[i]);
+			}
+				
+			if (instr.operandType[i] == "var" || instr.operandType[i] == "IntermediateCode")
+			{
+				cout << " R" << assignedRegisters[operand];
+			}
+			else
+			{
+				cout << ' ' << instr.operand[i];
+			}
+		}
 	}
 	cout <<endl;
 }
@@ -1008,7 +1030,6 @@ void Parser::printCodesByBlocks(BasicBlock *cfgNode)
 		{
 			printCodesByBlocks(cfgNode->next[i]);
 		}
-			
 	}
 }
 
@@ -1091,4 +1112,9 @@ IntermediateCode Parser::getIntermediateCode(int address)
 BasicBlock * Parser::getCFGTreeRoot()
 {
 	return root;
+}
+
+void Parser::setRegisters(map<string, int> assignedRegisters)
+{
+	this->assignedRegisters.insert(assignedRegisters.begin(), assignedRegisters.end());
 }

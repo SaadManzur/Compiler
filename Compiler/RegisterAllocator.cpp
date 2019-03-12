@@ -99,6 +99,9 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, bool liveRa
 		}
 		else if (instruction.opcode == "phi")
 		{
+			if (find_if(phiInstructions.begin(), phiInstructions.end(), [&](const IntermediateCode &a) { return a.address == instruction.address; }) == phiInstructions.end())
+				phiInstructions.push_back(instruction);
+
 			if (node->alive.find(instruction.getOperandRepresentation(0)) != node->alive.end())
 			{
 				node->alive.erase(instruction.getOperandRepresentation(0));
@@ -207,6 +210,8 @@ string RegisterAllocator::getNodeWithDegreeLessThanN()
 
 void RegisterAllocator::assignColor(string node)
 {
+	int selectedRegister = -1;
+
 	bool registerInUse[NUMBER_OF_REGISTERS];
 	memset(registerInUse, false, NUMBER_OF_REGISTERS);
 
@@ -219,12 +224,15 @@ void RegisterAllocator::assignColor(string node)
 	{
 		if (!registerInUse[i])
 		{
-			assignedColors[node] = i;
-			return;
+			selectedRegister = i;
+			break;
 		}
 	}
 
-	assignedColors[node] = lastVirtualRegisterNumber++;
+	if(selectedRegister < 0)
+		selectedRegister = lastVirtualRegisterNumber++;
+
+	assignedColors[node] = selectedRegister;
 }
 
 string RegisterAllocator::spillRegisterAndGetNode()
@@ -245,6 +253,64 @@ string RegisterAllocator::spillRegisterAndGetNode()
 
 	return selectedNode;
 }
+
+void RegisterAllocator::eliminatePhi()
+{
+	int clusterCount = 1;
+
+	for (IntermediateCode currentPhi : phiInstructions)
+	{
+		string clusterId = "C" + to_string(clusterCount++);
+		string phiFirstOperand = currentPhi.getOperandRepresentation(0);
+		clusters[clusterId].insert(phiFirstOperand);
+		
+		set<string> clusterEdges;
+		clusterEdges.insert(interferenceGraph[phiFirstOperand].begin(), interferenceGraph[phiFirstOperand].end());
+
+		for (int i = 1; i < MAXOPERANDLENGTH; i++)
+		{
+			string x = currentPhi.getOperandRepresentation(i);
+
+			for (string clusterMember : clusters[clusterId])
+			{
+				if (interferenceGraph[x].find(clusterMember) == interferenceGraph[x].end())
+				{
+					clusters[clusterId].insert(x);
+
+					set<string> newEdges = removeNodeFromInterferenceGraph(x);
+
+					clusterEdges.insert(newEdges.begin(), newEdges.end());
+				}
+			}
+		}
+
+		if(clusters[clusterId].size() > 1)
+			replaceNodeWithCluster(phiFirstOperand, clusterId, clusterEdges);
+	}
+}
+
+void RegisterAllocator::replaceNodeWithCluster(string node, string clusterId, set<string> edges)
+{
+	removeNodeFromInterferenceGraph(node);
+
+	insertNodeIntoInterferenceGraph(clusterId, edges);
+}
+
+void RegisterAllocator::applyClusterColor()
+{
+	for (auto cluster : clusters)
+	{
+		string clusterId = cluster.first;
+
+		for (string clusterMember : clusters[clusterId])
+		{
+			assignedColors[clusterMember] = assignedColors[clusterId];
+		}
+
+		assignedColors.erase(clusterId);
+	}
+}
+
 
 void RegisterAllocator::fillParentBlocks(BasicBlock *root)
 {
@@ -352,6 +418,23 @@ void RegisterAllocator::printAssignedRegisters()
 	}
 }
 
+void RegisterAllocator::printClusters()
+{
+	cout << "----------------Clusters------------------" << endl;
+
+	for (auto cluster : clusters)
+	{
+		cout << cluster.first << ": ";
+
+		for (string clusterMember : cluster.second)
+		{
+			cout << clusterMember << " ";
+		}
+
+		cout << endl;
+	}
+}
+
 bool RegisterAllocator::aExistsInBDominatorTree(BasicBlock *nodeA, BasicBlock *nodeB)
 {
 	if (nodeB == NULL)
@@ -379,12 +462,22 @@ void RegisterAllocator::start(BasicBlock *root)
 	cout << endl << "Still alive : " << root->alive.size() << endl << endl;
 	printInterferenceGraph();
 
+	eliminatePhi();
+	printInterferenceGraph();
+	printClusters();
+
 	cout << endl << "-----------------Coloring-------------------" << endl;
 	colorGraph();
+	applyClusterColor();
 	printAssignedRegisters();
 }
 
 string RegisterAllocator::getAssignedRegister(string operand)
 {
 	return "R" + to_string(assignedColors[operand]);
+}
+
+map<string, int> RegisterAllocator::getAllAssignedRegisters()
+{
+	return assignedColors;
 }

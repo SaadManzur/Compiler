@@ -15,9 +15,11 @@ class Parser
 {
 private:
 	vector<IntermediateCode> intermediateCodelist;
+	vector<IntermediateCode> phiInstructions;
 	int symbol;
 	int currentCodeAddress;
 	Scanner *scanner;
+	map<string, int> assignedRegisters;
 
 	void Next();
 
@@ -88,4 +90,5 @@ public:
 	vector<IntermediateCode>& getIntermediateCodelist();
 	IntermediateCode getIntermediateCode(int address);
 	BasicBlock *getCFGTreeRoot();
+	void setRegisters(map<string, int> assignedRegisters);
 };

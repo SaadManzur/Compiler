@@ -24,6 +24,10 @@ int main()
 		
 		RegisterAllocator registerAllocator(parser);
 		registerAllocator.start(parser.getCFGTreeRoot());
+		
+		cout << "..........after allocation........." << endl << endl;
+		parser.setRegisters(registerAllocator.getAllAssignedRegisters());
+		parser.printAllIntermediateCode();
 
 		freopen_s(&stream, "cfg.vcg", "w", stdout);
 	//	freopen("cfg.vcg", "w", stdout);
