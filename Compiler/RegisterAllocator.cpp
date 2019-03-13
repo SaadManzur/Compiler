@@ -108,15 +108,19 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 				node->alive.erase(instruction.getOperandRepresentation(1));
 			}
 
+			cost[instruction.getOperandRepresentation(1)] += (depth * 0.5);
+
 			generateEdgeBetween(instruction.getOperandRepresentation(1), node->alive);
 
 			if (instruction.operandType[0] == "var")
 			{
 				node->alive.insert(instruction.getOperandRepresentation(0));
+				cost[instruction.getOperandRepresentation(0)] += depth;
 			}
 			else if (instruction.operandType[0] == "IntermediateCode")
 			{
 				node->alive.insert(instruction.operand[0]);
+				cost[instruction.operand[0]] += depth;
 			}
 		}
 		else if (instruction.opcode == "phi")
@@ -129,6 +133,7 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 				node->alive.erase(instruction.getOperandRepresentation(0));
 			}
 			generateEdgeBetween(instruction.getOperandRepresentation(0), node->alive);
+			cost[instruction.getOperandRepresentation(0)] += (depth * 0.5);
 			
 			string leftOperand = instruction.getOperandRepresentation(1);
 			string rightOperand = instruction.getOperandRepresentation(2);
@@ -146,15 +151,17 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 		}
 		else
 		{
-			for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
 			{
-				if (instruction.operandType[i] == "var")
+				if (instruction.operandType[j] == "var")
 				{
-					node->alive.insert(instruction.getOperandRepresentation(i));
+					node->alive.insert(instruction.getOperandRepresentation(j));
+					cost[instruction.getOperandRepresentation(j)] += depth;
 				}
-				else if (instruction.operandType[i] == "IntermediateCode")
+				else if (instruction.operandType[j] == "IntermediateCode")
 				{
-					node->alive.insert(instruction.operand[i]);
+					node->alive.insert(instruction.operand[j]);
+					cost[instruction.operand[j]] += depth;
 				}
 			}
 
