@@ -111,6 +111,7 @@ public:
 	bool liveRangeGenerated = false;
 	bool isLoopHeader = false;
 	bool loopPhiProcessed = false;
+	int loopCounter = 0;
 	vector<int> instructionAddrList;
 	set<string> alive;
 	set<string> phiAliveFromLeft;

@@ -20,16 +20,18 @@ private:
 	int lastVirtualRegisterNumber = VIRTUAL_REGISTER_OFFSET;
 	BasicBlock *outerMostBlock;
 	vector<IntermediateCode> phiInstructions;
+	vector<IntermediateCode> instructionsToBeEliminated;
 	map<string, set<string>> interferenceGraph;
 	map<string, set<string>> clusters;
+	map<string, int> cost;
 	map<int, string> registers;
 	map<string, int> assignedColors;
 	vector<Result> aliveValues;
 	Parser parser = NULL;
 
 	void generateInterferenceGraph(BasicBlock *root);
-	void calculateLiveRange(BasicBlock* node, set<string> alive);
-	void calculateLiveRangeForBlock(BasicBlock *node, bool liveRangeGenerated = true);
+	void calculateLiveRange(BasicBlock* node, set<string> alive, int depth = 1);
+	void calculateLiveRangeForBlock(BasicBlock *node, int depth = 1, bool liveRangeGenerated = true);
 	void generateEdgeBetween(string variable, set<string> alive);
 	void colorGraph();
 	set<string> removeNodeFromInterferenceGraph(string node);
@@ -50,7 +52,9 @@ private:
 public:
 	RegisterAllocator(const Parser &parser);
 
-	void start(BasicBlock *root);
 	string getAssignedRegister(string operand);
 	map<string, int> getAllAssignedRegisters();
+	vector<IntermediateCode> getInstructionsToBeEliminated();
+
+	void start(BasicBlock *root);
 };
