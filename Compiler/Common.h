@@ -7,6 +7,7 @@
 #include <string>
 #include<unordered_map>
 #include "Logger.h"
+#include <set>
 #endif
 
 #define MAXOPERANDLENGTH 3
@@ -125,6 +126,8 @@ public:
 	std::vector<std::string> arrayList;
 	std::vector< std::vector<int> > arrayDimensions;
 	std::unordered_map<std::string, int> identifierHashMap;
+	std::set<int> globalVarsModifies;
+	std::set<int> globalVarsUses;
 };
 
 void printIntermediateCode(IntermediateCode instr);

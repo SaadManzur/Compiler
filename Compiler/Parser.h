@@ -96,6 +96,8 @@ private:
 	void reOrderInstructions(int start, int end);
 	int getCachedVersion(Result x);
 	void insertKill(IntermediateCode instr);
+	void storeGlobalVars(string funcName);
+	void loadGlobalVars(string funcName);
 public:
 	Parser(Scanner *scanner);
 	void Parse();

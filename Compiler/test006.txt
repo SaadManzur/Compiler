@@ -3,8 +3,8 @@ var a;
 function foo( );
 var i;
 {
-	let i <- 0;
-	return i
+	let a <- 0;
+	return a
 };
 {
 	call foo

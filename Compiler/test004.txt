@@ -1,9 +1,9 @@
 main
 array[5] input;
-var maxnumber;
+var maxnumber,size;
 function max(a1,a2,a3,a4,a5);
 array[5] arg;
-var size,temp,i;
+var temp,i;
 {
                 let arg[1] <- a1;
                 let arg[2] <- a2;

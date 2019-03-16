@@ -99,6 +99,10 @@ Result Parser::factor()
 			currentBlock->addInstruction(instr);
 			x.address = instr.address;
 		}
+		else if(x.isGlobal==1)
+		{
+			currentScope->globalVarsUses.insert(x.address);
+		}
 	}
 	catch (SyntaxException e)
 	{
@@ -209,6 +213,8 @@ void Parser::assignment()
 			{
 				updateVersion(y.address, currentCodeAddress,y.isGlobal);
 				instr = createIntermediateCode(becomesToken, x, y);
+				if(y.isGlobal==1)
+					currentScope->globalVarsModifies.insert(y.address);
 			}
 			else if (y.kind.compare("IntermediateCode") == 0)
 			{
@@ -295,6 +301,7 @@ Result Parser::funcCall()
 		}
 	//	Result x;
 		IntermediateCode instr;
+		storeGlobalVars(identifierName);
 		if (symbol == openParenToken)
 		{
 			Next();
@@ -304,6 +311,7 @@ Result Parser::funcCall()
 				currentBlock->addInstruction(instr);
 			}
         */
+			
 			if(symbol != closeParenToken)
 			{
 				vector<Result> params;
@@ -335,6 +343,7 @@ Result Parser::funcCall()
 			x = createAndAddCode("pop", "", "");
 			//throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 		}
+		loadGlobalVars(identifierName);
 	}
 	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	return x;
@@ -971,6 +980,7 @@ void Parser::updateVersion(int id, int version,int isGlobal)
 
 string Parser::getName(Result x)
 {
+	assert(x.isGlobal != -1);
 	if (x.isGlobal)
 		return global->variableList[x.address];
 	else
@@ -1359,6 +1369,64 @@ void Parser::insertKill(IntermediateCode instr)
 		joinBlock->addInstruction(temp);
 	}
 	joinBlockStack = backup;
+}
+
+void Parser::storeGlobalVars(string funcName)
+{
+	Result x;
+	x.isGlobal = 1;
+	x.kind = "var";
+	IntermediateCode instr;
+	int id = functionNametoScopeId(funcName);
+	if (id == -1)
+	{
+		for (int i = 0; i < global->variableList.size(); i++)
+		{
+			x.address = i;
+			instr = createIntermediateCode("STW", x, Result());
+			currentBlock->addInstruction(instr);
+		}
+		return;
+	//   throw SyntaxException("Function Undefined");
+	}
+		
+	auto it = functions[id]->globalVarsUses.begin();
+	for (; it != functions[id]->globalVarsUses.end(); it++)
+	{
+		x.address = *it;
+		instr = createIntermediateCode("STW", x, Result());
+		currentBlock->addInstruction(instr);
+	}
+}
+
+void Parser::loadGlobalVars(string funcName)
+{
+	Result x;
+	x.isGlobal = 1;
+	x.kind = "var";
+	IntermediateCode instr;
+	int id = functionNametoScopeId(funcName);
+	if (id == -1)
+	{
+		for (int i = 0; i < global->variableList.size(); i++)
+		{
+			x.address = i;
+			updateVersion(x.address, currentCodeAddress, x.isGlobal);
+			instr = createIntermediateCode("LDW", x, Result());
+			currentBlock->addInstruction(instr);
+		}
+		return;
+		//   throw SyntaxException("Function Undefined");
+	}
+
+	auto it = functions[id]->globalVarsModifies.begin();
+	for (; it != functions[id]->globalVarsModifies.end(); it++)
+	{
+		x.address = *it;
+		updateVersion(x.address, currentCodeAddress, x.isGlobal);
+		instr = createIntermediateCode("LDW", x, Result());
+		currentBlock->addInstruction(instr);
+	}
 }
 
 
