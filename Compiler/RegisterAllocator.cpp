@@ -269,17 +269,15 @@ void RegisterAllocator::assignColor(string node)
 
 string RegisterAllocator::spillRegisterAndGetNode()
 {
-	int minDifference = 9999;
+	int minCost = 9999;
 	string selectedNode;
 
 	for (auto node : interferenceGraph)
 	{
-		int degree = interferenceGraph[node.first].size();
-
-		if (abs(degree - NUMBER_OF_REGISTERS) < minDifference)
+		if (cost[string(node.first)] < minCost)
 		{
 			selectedNode = string(node.first);
-			minDifference = abs(degree - NUMBER_OF_REGISTERS);
+			minCost = cost[string(node.first)];
 		}
 	}
 
@@ -346,6 +344,14 @@ void RegisterAllocator::applyClusterColor()
 	}
 }
 
+void RegisterAllocator::eliminateInstructions()
+{
+	for (auto instruction : instructionsToBeEliminated)
+	{
+		instructionBlocks[instruction.address]->removeInstruction(instruction);
+	}
+}
+
 
 void RegisterAllocator::fillParentBlocks(BasicBlock *root)
 {
@@ -368,6 +374,11 @@ void RegisterAllocator::fillParentBlocks(BasicBlock *root)
 		}
 		
 		visited.insert(currentBlock);
+
+		for (int address : currentBlock->instructionAddrList)
+		{
+			instructionBlocks[address] = currentBlock;
+		}
 		
 		if (currentBlock->next.size() == 0)
 			outerMostBlock = currentBlock;
@@ -510,6 +521,7 @@ void RegisterAllocator::start(BasicBlock *root)
 	printInterferenceGraph();
 
 	eliminatePhi();
+	eliminateInstructions();
 	printInterferenceGraph();
 	printClusters();
 

@@ -34,6 +34,16 @@ void BasicBlock::addInstructionInBegining(IntermediateCode instr)
 	instructionAddrList.insert(instructionAddrList.begin(), instr.address);
 }
 
+void BasicBlock::removeInstruction(IntermediateCode instruction)
+{
+	vector<int>::iterator it = find(instructionAddrList.begin(), instructionAddrList.end(), instruction.address);
+
+	if (it != instructionAddrList.end())
+	{
+		instructionAddrList.erase(it);
+	}
+}
+
 int BasicBlock::blockSerialNumber = 0;
 
 BasicBlock::BasicBlock()

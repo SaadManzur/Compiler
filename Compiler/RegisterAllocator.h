@@ -24,6 +24,7 @@ private:
 	map<string, set<string>> interferenceGraph;
 	map<string, set<string>> clusters;
 	map<string, int> cost;
+	map<int, BasicBlock*> instructionBlocks;
 	map<int, string> registers;
 	map<string, int> assignedColors;
 	vector<Result> aliveValues;
@@ -42,6 +43,7 @@ private:
 	void eliminatePhi();
 	void replaceNodeWithCluster(string node, string clusterId, set<string> edges);
 	void applyClusterColor();
+	void eliminateInstructions();
 	
 	void fillParentBlocks(BasicBlock *root);
 	void printParents(BasicBlock* root, set<BasicBlock*> visited);

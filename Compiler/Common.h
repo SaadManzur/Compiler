@@ -89,6 +89,7 @@ public:
 	long long version[MAXOPERANDLENGTH];
 	string operandType[MAXOPERANDLENGTH];
 	int previousSameOp;
+	int blockId;
 
 	string getOperandRepresentation(int index);
 	string getImmediateAddressRepresentation();
@@ -122,5 +123,6 @@ public:
 	vector<BasicBlock *> back;
 	void addInstruction(IntermediateCode instr);
 	void addInstructionInBegining(IntermediateCode instr);
+	void removeInstruction(IntermediateCode instruction);
 	BasicBlock();
 };
