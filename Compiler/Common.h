@@ -128,6 +128,7 @@ public:
 	std::unordered_map<std::string, int> identifierHashMap;
 	std::set<int> globalVarsModifies;
 	std::set<int> globalVarsUses;
+	std::vector<int> arguments;
 };
 
 void printIntermediateCode(IntermediateCode instr);

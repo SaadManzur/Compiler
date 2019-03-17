@@ -99,6 +99,7 @@ private:
 	void storeGlobalVars(string funcName);
 	void loadGlobalVars(string funcName);
 	void flushGlobalVariables();
+	void loadArguments();
 public:
 	Parser(Scanner *scanner);
 	void Parse();

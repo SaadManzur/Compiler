@@ -4,85 +4,90 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-58 : mul 1 4 
-59 : add baseReg input_baseAddr 
-60 : adda (58) (59) 
-61 : store 22 (60) 
-62 : mul 2 4 
-64 : adda (62) (59) 
-65 : store 61 (64) 
-66 : mul 3 4 
-68 : adda (66) (59) 
-69 : store 17 (68) 
-70 : mul 4 4 
-72 : adda (70) (59) 
-73 : store 34 (72) 
-74 : mul 5 4 
-76 : adda (74) (59) 
-77 : store 11 (76) 
-80 : adda (58) (59) 
-81 : load (80)  
-84 : adda (62) (59) 
-85 : load (84)  
-88 : adda (66) (59) 
-89 : load (88)  
-92 : adda (70) (59) 
-93 : load (92)  
-96 : adda (74) (59) 
-97 : load (96)  
-107 : push
-98 : push (81)  
-99 : push (85)  
-100 : push (89)  
-101 : push (93)  
-102 : push (97)  
-103 : JSR 1  
-104 : pop   
-105 : LDW size_105  
+64 : mul 1 4 
+65 : add baseReg input_baseAddr 
+66 : adda (64) (65) 
+67 : store 22 (66) 
+68 : mul 2 4 
+70 : adda (68) (65) 
+71 : store 61 (70) 
+72 : mul 3 4 
+74 : adda (72) (65) 
+75 : store 17 (74) 
+76 : mul 4 4 
+78 : adda (76) (65) 
+79 : store 34 (78) 
+80 : mul 5 4 
+82 : adda (80) (65) 
+83 : store 11 (82) 
+86 : adda (64) (65) 
+87 : load (86)  
+90 : adda (68) (65) 
+91 : load (90)  
+94 : adda (72) (65) 
+95 : load (94)  
+98 : adda (76) (65) 
+99 : load (98)  
+102 : adda (80) (65) 
+103 : load (102)  
+113 : push
+104 : push (87)  
+105 : push (91)  
+106 : push (95)  
+107 : push (99)  
+108 : push (103)  
+109 : JSR 1  
+110 : pop   
+111 : LDW size_111  
 ]"
 }node: {
 title: "1"
 label: "1[
 9 : prologue   
-10 : mul 1 4 
-11 : add baseReg arg_baseAddr 
-12 : adda (10) (11) 
-13 : store a1_2 (12) 
-14 : mul 2 4 
-16 : adda (14) (11) 
-17 : store a2_3 (16) 
-18 : mul 3 4 
-20 : adda (18) (11) 
-21 : store a3_4 (20) 
-22 : mul 4 4 
-24 : adda (22) (11) 
-25 : store a4_5 (24) 
-26 : mul 5 4 
-28 : adda (26) (11) 
-29 : store a5_6 (28) 
-30 : mov 5 size_30 
-31 : mov 2 i_31 
-34 : adda (10) (11) 
-35 : load (34)  
+10 : LDS a1_10 6 
+11 : LDS a2_11 5 
+12 : LDS a3_12 4 
+13 : LDS a4_13 3 
+14 : LDS a5_14 2 
+15 : mul 1 4 
+16 : add baseReg arg_baseAddr 
+17 : adda (15) (16) 
+18 : store a1_10 (17) 
+19 : mul 2 4 
+21 : adda (19) (16) 
+22 : store a2_11 (21) 
+23 : mul 3 4 
+25 : adda (23) (16) 
+26 : store a3_12 (25) 
+27 : mul 4 4 
+29 : adda (27) (16) 
+30 : store a4_13 (29) 
+31 : mul 5 4 
+33 : adda (31) (16) 
+34 : store a5_14 (33) 
+35 : mov 5 size_35 
+36 : mov 2 i_36 
+39 : adda (15) (16) 
+40 : load (39)  
 ]"
 }edge: { sourcename: "1"  targetname: "2" color: blue }
 node: {
 title: "2"
 label: "2[
-54 : phi i_54 i_31 (52)
-51 : phi temp_51 (35) temp_50
-37 : cmp i_54 size_30 
-38 : bgt (37) 6 
+59 : phi i_59 i_36 (57)
+56 : phi temp_56 (40) temp_55
+42 : cmp i_59 size_35 
+43 : bgt (42) 6 
 ]"
 }edge: { sourcename: "2"  targetname: "3" color: blue }
 node: {
 title: "3"
 label: "3[
-39 : mul i_54 4 
-41 : adda (39) (11) 
-42 : load (41)  
-43 : cmp (42) temp_51 
-44 : ble (43) 5 
+44 : mul i_59 4 
+46 : adda (44) (16) 
+47 : load (46)  
+48 : cmp (47) temp_56 
+49 : ble (48) 5 
 ]"
 }edge: { sourcename: "3"  targetname: "4" color: blue }
 node: {
@@ -93,9 +98,9 @@ label: "4[
 node: {
 title: "5"
 label: "5[
-50 : phi temp_50 (42) temp_51
-52 : add i_54 1 
-55 : bra 2  
+55 : phi temp_55 (47) temp_56
+57 : add i_59 1 
+60 : bra 2  
 ]"
 }edge: { sourcename: "5"  targetname: "2" color: blue }
 edge: { sourcename: "3"  targetname: "5" color: blue }
@@ -103,8 +108,9 @@ edge: { sourcename: "2"  targetname: "6" color: blue }
 node: {
 title: "6"
 label: "6[
-56 : STW size_30  
-57 : epilogue   
+61 : STS temp_56 7 
+62 : STW size_35  
+63 : epilogue   
 ]"
 }edge: { sourcename: "0"  targetname: "1" color: Red }
 node: {

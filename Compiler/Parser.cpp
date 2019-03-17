@@ -544,11 +544,18 @@ void Parser::whileStatement()
 
 int Parser::returnStatement()
 {
+	Result y;
+	y.kind = "const";
+	y.value = currentScope->arguments.size() + 2;
+
 	if (symbol == returnToken)
 	{
 		Next();
 
-		expression();
+		Result x=expression();
+		IntermediateCode instr = createIntermediateCode("STS", x, y);
+		currentBlock->addInstruction(instr);
+
 		flushGlobalVariables();
 		createAndAddCode("epilogue", string(), string());
 	}
@@ -749,13 +756,20 @@ void Parser::formalParam()
 		{
 			x=ident();
 			updateScope(dim, x);
+
+			determineType(x);   //need get the inscopeId;
 			currentScope->numOfArg++;
+			currentScope->arguments.push_back(x.address);
+
 			while (symbol == commaToken)
 			{
 				Next();
 				x=ident();
 				updateScope(dim, x);
+
+				determineType(x);   //need get the inscopeId;
 				currentScope->numOfArg++;
+				currentScope->arguments.push_back(x.address);
 			}
 		}
 
@@ -775,6 +789,7 @@ void Parser::funcBody()
 	if (symbol == beginToken)
 	{
 		createAndAddCode("prologue", string(), string());
+		loadArguments();
 		Next();
 		int noReturnStat=statSequence();
 		if (noReturnStat)
@@ -1457,6 +1472,26 @@ void Parser::flushGlobalVariables()
 		x.address = *it;
 		instr = createIntermediateCode("STW", x, Result());
 		currentBlock->addInstruction(instr);
+	}
+}
+
+void Parser::loadArguments()
+{
+	Result x, y;
+	x.isGlobal = 0;
+	x.kind = "var";
+	
+	y.kind = "const";
+	y.value = currentScope->arguments.size() + 1;
+
+	IntermediateCode instr;
+	for (int i = 0; i < currentScope->arguments.size(); i++, y.value--)
+	{
+		x.address = currentScope->arguments[i];
+		updateVersion(x.address, currentCodeAddress, x.isGlobal);
+		instr = createIntermediateCode("LDS", x, y);
+		currentBlock->addInstruction(instr);
+
 	}
 }
 
