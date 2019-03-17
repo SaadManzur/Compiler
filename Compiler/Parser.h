@@ -98,6 +98,7 @@ private:
 	void insertKill(IntermediateCode instr);
 	void storeGlobalVars(string funcName);
 	void loadGlobalVars(string funcName);
+	void flushGlobalVariables();
 public:
 	Parser(Scanner *scanner);
 	void Parse();

@@ -4,32 +4,31 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-57 : mul 1 4 
-58 : add baseReg input_baseAddr 
-59 : adda (57) (58) 
-60 : store 22 (59) 
-61 : mul 2 4 
-63 : adda (61) (58) 
-64 : store 61 (63) 
-65 : mul 3 4 
-67 : adda (65) (58) 
-68 : store 17 (67) 
-69 : mul 4 4 
-71 : adda (69) (58) 
-72 : store 34 (71) 
-73 : mul 5 4 
-75 : adda (73) (58) 
-76 : store 11 (75) 
-77 : STW size_30  
-80 : adda (57) (58) 
+58 : mul 1 4 
+59 : add baseReg input_baseAddr 
+60 : adda (58) (59) 
+61 : store 22 (60) 
+62 : mul 2 4 
+64 : adda (62) (59) 
+65 : store 61 (64) 
+66 : mul 3 4 
+68 : adda (66) (59) 
+69 : store 17 (68) 
+70 : mul 4 4 
+72 : adda (70) (59) 
+73 : store 34 (72) 
+74 : mul 5 4 
+76 : adda (74) (59) 
+77 : store 11 (76) 
+80 : adda (58) (59) 
 81 : load (80)  
-84 : adda (61) (58) 
+84 : adda (62) (59) 
 85 : load (84)  
-88 : adda (65) (58) 
+88 : adda (66) (59) 
 89 : load (88)  
-92 : adda (69) (58) 
+92 : adda (70) (59) 
 93 : load (92)  
-96 : adda (73) (58) 
+96 : adda (74) (59) 
 97 : load (96)  
 107 : push
 98 : push (81)  
@@ -104,7 +103,8 @@ edge: { sourcename: "2"  targetname: "6" color: blue }
 node: {
 title: "6"
 label: "6[
-56 : epilogue   
+56 : STW size_30  
+57 : epilogue   
 ]"
 }edge: { sourcename: "0"  targetname: "1" color: Red }
 node: {

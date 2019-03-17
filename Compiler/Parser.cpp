@@ -99,9 +99,19 @@ Result Parser::factor()
 			currentBlock->addInstruction(instr);
 			x.address = instr.address;
 		}
-		else if(x.isGlobal==1)
+		else if(x.isGlobal==1 && 
+			currentScope->globalVarsModifies.find(x.address)==currentScope->globalVarsModifies.end())
 		{
-			currentScope->globalVarsUses.insert(x.address);
+			if (currentScope->globalVarsUses.find(x.address) == currentScope->globalVarsUses.end())
+			{
+				updateVersion(x.address, currentCodeAddress, x.isGlobal);
+				IntermediateCode instr = createIntermediateCode("LDW", x, Result());
+				currentBlock->addInstruction(instr);
+
+
+				currentScope->globalVarsUses.insert(x.address);
+			}
+			
 		}
 	}
 	catch (SyntaxException e)
@@ -539,6 +549,7 @@ int Parser::returnStatement()
 		Next();
 
 		expression();
+		flushGlobalVariables();
 		createAndAddCode("epilogue", string(), string());
 	}
 	else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
@@ -766,8 +777,12 @@ void Parser::funcBody()
 		createAndAddCode("prologue", string(), string());
 		Next();
 		int noReturnStat=statSequence();
-		if(noReturnStat)
+		if (noReturnStat)
+		{
+			flushGlobalVariables();
 			createAndAddCode("epilogue", string(), string());
+		}
+			
 		if (symbol == endToken) Next();
 		else throw SyntaxException(scanner->GetLineNumber(), scanner->GetColNumber());
 	}
@@ -1425,6 +1440,22 @@ void Parser::loadGlobalVars(string funcName)
 		x.address = *it;
 		updateVersion(x.address, currentCodeAddress, x.isGlobal);
 		instr = createIntermediateCode("LDW", x, Result());
+		currentBlock->addInstruction(instr);
+	}
+}
+
+void Parser::flushGlobalVariables()
+{
+	Result x;
+	x.isGlobal = 1;
+	x.kind = "var";
+	IntermediateCode instr;
+	if (currentScope == global)
+		return;
+	for (auto it = currentScope->globalVarsModifies.begin(); it !=currentScope->globalVarsModifies.end(); it++)
+	{
+		x.address = *it;
+		instr = createIntermediateCode("STW", x, Result());
 		currentBlock->addInstruction(instr);
 	}
 }
