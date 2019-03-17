@@ -1,10 +1,6 @@
 #include "EliminateRedundency.h"
 #include<cassert>
 
-
-
-
-
 EliminateRedundency::EliminateRedundency(Parser *parser)
 {
 	this->parser = parser;

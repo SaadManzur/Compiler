@@ -1,6 +1,7 @@
 #include "Common.h"
 #include "Scanner.h"
 #include "Parser.h"
+#include "RegisterAllocator.h"
 #include<iostream>
 #include<cstdio>
 #include<cstdlib>
@@ -29,6 +30,13 @@ int main()
 	//	parser->printCodesByBlocks();
 		
 
+		RegisterAllocator registerAllocator(parser);
+		registerAllocator.start(parser.getCFGTreeRoot());
+		
+		cout << "..........after allocation........." << endl << endl;
+		parser.setRegisters(registerAllocator.getAllAssignedRegisters());
+		parser.printAllIntermediateCode();
+
 		freopen_s(&stream, "cfg.vcg", "w", stdout);
 		parser->outputVCGFile();
 
@@ -39,10 +47,11 @@ int main()
 	catch (SyntaxException exception)
 	{
 		logger.Error(exception.getMessage());
+		cout << exception.getMessage() << endl;
 	}
 	
-	int x;
-	cin >> x;
+	getchar();
+	getchar();
 
 	return 0;
 }

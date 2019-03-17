@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include<unordered_map>
+#include <set>
 #include "Logger.h"
 #include <set>
 #endif
@@ -85,10 +86,15 @@ class IntermediateCode {
 public:
 	int address;
 	string opcode;
+	int iOpcode;
 	string operand[MAXOPERANDLENGTH];
 	long long version[MAXOPERANDLENGTH];
 	string operandType[MAXOPERANDLENGTH];
 	int previousSameOp;
+	int blockId;
+
+	string getOperandRepresentation(int index);
+	string getImmediateAddressRepresentation();
 };
 
 class Result {
@@ -106,11 +112,21 @@ class BasicBlock
 	static int blockSerialNumber;
 public:
 	int id;
+	bool liveRangeGenerated = false;
+	bool isLoopHeader = false;
+	bool loopPhiProcessed = false;
+	int loopCounter = 0;
 	vector<int> instructionAddrList;
+	set<string> alive;
+	set<string> phiAliveFromLeft;
+	set<string> phiAliveFromRight;
 	vector<BasicBlock *> dominates;
+	BasicBlock* dominatedBy;
 	vector<BasicBlock *> next;
+	vector<BasicBlock *> back;
 	void addInstruction(IntermediateCode instr);
 	void addInstructionInBegining(IntermediateCode instr);
+	void removeInstruction(IntermediateCode instruction);
 	BasicBlock();
 };
 
