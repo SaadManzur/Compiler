@@ -5,7 +5,9 @@
 #include <vector>
 #include <map>
 #include <string>
+#include<unordered_map>
 #include "Logger.h"
+#include <set>
 #endif
 
 #define MAXOPERANDLENGTH 3
@@ -91,11 +93,12 @@ public:
 
 class Result {
 public: 
-	string kind;  //const, var, reg, condition , IntermediateCode
+	string kind;  //const, var, reg, condition , IntermediateCode, array
 	int value;   // value if it is a constant
 	int address;  //address if it is a variable/IntermediateCode
 	int regno;    // register number if it is a reg or a condition
 	int cond, fixupLocation;  // if it is a condition
+	int isGlobal=-1;  
 };
 
 class BasicBlock
@@ -110,3 +113,23 @@ public:
 	void addInstructionInBegining(IntermediateCode instr);
 	BasicBlock();
 };
+
+class Scope
+{
+public:
+	BasicBlock * root;
+	string functionName;
+	int functionType;   // 0 for proc and 1 for func
+	int numOfArg=0;  
+	std::vector<std::string> variableList;
+	std::vector<int> versionTable;
+	std::vector<std::string> arrayList;
+	std::vector< std::vector<int> > arrayDimensions;
+	std::unordered_map<std::string, int> identifierHashMap;
+	std::set<int> globalVarsModifies;
+	std::set<int> globalVarsUses;
+	std::vector<int> arguments;
+};
+
+void printIntermediateCode(IntermediateCode instr);
+

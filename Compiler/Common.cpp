@@ -1,4 +1,5 @@
 #include "Common.h"
+#include<iostream>
 
 SyntaxException::SyntaxException()
 {
@@ -39,4 +40,24 @@ int BasicBlock::blockSerialNumber = 0;
 BasicBlock::BasicBlock()
 {
 	id = BasicBlock::blockSerialNumber++;
+}
+
+void printIntermediateCode(IntermediateCode instr)
+{
+	cout << instr.address << ' ' << ':' << ' ';
+	cout << instr.opcode;
+	for (int i = 0; i < MAXOPERANDLENGTH && (instr.operand[i].length() > 0 || instr.operandType->length() > 0); i++)
+	{
+		if (instr.operandType[i].compare("JumpAddr") == 0)
+		{
+			BasicBlock * nextBlock = (BasicBlock *)(instr.version[i]);
+			instr.operand[i] = to_string(nextBlock->id);
+		}
+		if(instr.operandType[i].compare("IntermediateCode")==0)
+			instr.operand[i]= "(" + to_string(instr.version[i]) + ")";
+		cout << ' ' << instr.operand[i];
+		if (instr.operandType[i].compare("var") == 0)
+			cout << '_' << instr.version[i];
+	}
+	cout << endl;
 }

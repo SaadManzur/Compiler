@@ -9,40 +9,26 @@ label: "0[
 66 : adda (64) (65) 
 67 : store 22 (66) 
 68 : mul 2 4 
-69 : add baseReg input_baseAddr 
-70 : adda (68) (69) 
+70 : adda (68) (65) 
 71 : store 61 (70) 
 72 : mul 3 4 
-73 : add baseReg input_baseAddr 
-74 : adda (72) (73) 
+74 : adda (72) (65) 
 75 : store 17 (74) 
 76 : mul 4 4 
-77 : add baseReg input_baseAddr 
-78 : adda (76) (77) 
+78 : adda (76) (65) 
 79 : store 34 (78) 
 80 : mul 5 4 
-81 : add baseReg input_baseAddr 
-82 : adda (80) (81) 
+82 : adda (80) (65) 
 83 : store 11 (82) 
-84 : mul 1 4 
-85 : add baseReg input_baseAddr 
-86 : adda (84) (85) 
+86 : adda (64) (65) 
 87 : load (86)  
-88 : mul 2 4 
-89 : add baseReg input_baseAddr 
-90 : adda (88) (89) 
+90 : adda (68) (65) 
 91 : load (90)  
-92 : mul 3 4 
-93 : add baseReg input_baseAddr 
-94 : adda (92) (93) 
+94 : adda (72) (65) 
 95 : load (94)  
-96 : mul 4 4 
-97 : add baseReg input_baseAddr 
-98 : adda (96) (97) 
+98 : adda (76) (65) 
 99 : load (98)  
-100 : mul 5 4 
-101 : add baseReg input_baseAddr 
-102 : adda (100) (101) 
+102 : adda (80) (65) 
 103 : load (102)  
 113 : push
 104 : push (87)  
@@ -53,7 +39,6 @@ label: "0[
 109 : JSR 1  
 110 : pop   
 111 : LDW size_111  
-112 : mov (110) maxnumber_112 
 ]"
 }node: {
 title: "1"
@@ -69,35 +54,28 @@ label: "1[
 17 : adda (15) (16) 
 18 : store a1_10 (17) 
 19 : mul 2 4 
-20 : add baseReg arg_baseAddr 
-21 : adda (19) (20) 
+21 : adda (19) (16) 
 22 : store a2_11 (21) 
 23 : mul 3 4 
-24 : add baseReg arg_baseAddr 
-25 : adda (23) (24) 
+25 : adda (23) (16) 
 26 : store a3_12 (25) 
 27 : mul 4 4 
-28 : add baseReg arg_baseAddr 
-29 : adda (27) (28) 
+29 : adda (27) (16) 
 30 : store a4_13 (29) 
 31 : mul 5 4 
-32 : add baseReg arg_baseAddr 
-33 : adda (31) (32) 
+33 : adda (31) (16) 
 34 : store a5_14 (33) 
 35 : mov 5 size_35 
 36 : mov 2 i_36 
-37 : mul 1 4 
-38 : add baseReg arg_baseAddr 
-39 : adda (37) (38) 
+39 : adda (15) (16) 
 40 : load (39)  
-41 : mov (40) temp_41 
 ]"
 }edge: { sourcename: "1"  targetname: "2" color: blue }
 node: {
 title: "2"
 label: "2[
-59 : phi i_59 i_36 i_58
-56 : phi temp_56 temp_41 temp_55
+59 : phi i_59 i_36 (57)
+56 : phi temp_56 (40) temp_55
 42 : cmp i_59 size_35 
 43 : bgt (42) 6 
 ]"
@@ -106,8 +84,7 @@ node: {
 title: "3"
 label: "3[
 44 : mul i_59 4 
-45 : add baseReg arg_baseAddr 
-46 : adda (44) (45) 
+46 : adda (44) (16) 
 47 : load (46)  
 48 : cmp (47) temp_56 
 49 : ble (48) 5 
@@ -116,19 +93,13 @@ label: "3[
 node: {
 title: "4"
 label: "4[
-50 : mul i_59 4 
-51 : add baseReg arg_baseAddr 
-52 : adda (50) (51) 
-53 : load (52)  
-54 : mov (53) temp_54 
 ]"
 }edge: { sourcename: "4"  targetname: "5" color: blue }
 node: {
 title: "5"
 label: "5[
-55 : phi temp_55 temp_54 temp_56
+55 : phi temp_55 (47) temp_56
 57 : add i_59 1 
-58 : mov (57) i_58 
 60 : bra 2  
 ]"
 }edge: { sourcename: "5"  targetname: "2" color: blue }

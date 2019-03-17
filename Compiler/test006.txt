@@ -1,0 +1,11 @@
+main
+var a;
+function foo( );
+var i;
+{
+	let a <- 0;
+	return a
+};
+{
+	call foo
+}.
