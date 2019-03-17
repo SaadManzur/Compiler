@@ -5,23 +5,31 @@
 #include<iostream>
 #include<cstdio>
 #include<cstdlib>
+#include "EliminateRedundency.h"
+#include<cassert>
 using namespace std;
 
 int main()
 {
 	Logger logger;
 	std::FILE *stream;
-
 	try
 	{
-		Scanner *scanner = new Scanner("source.txt");
+		Scanner *scanner = new Scanner("test004.txt");
 
-		Parser parser(scanner);
-		parser.Parse();
-		parser.printAllIntermediateCode();
-		cout << "..........complete........." << endl << endl;
-		parser.printCodesByBlocks();
+		Parser *parser= new Parser(scanner);
+		parser->Parse();
+/**/	EliminateRedundency step2(parser);
+		step2.copyPropagation();
+		step2.updateVersion();
+		step2.CSE();
+		step2.printCodesByBlocks();
 		
+	//	parser->printAllIntermediateCode();
+	//	cout << "..........complete........." << endl << endl;
+	//	parser->printCodesByBlocks();
+		
+
 		RegisterAllocator registerAllocator(parser);
 		registerAllocator.start(parser.getCFGTreeRoot());
 		
@@ -30,9 +38,11 @@ int main()
 		parser.printAllIntermediateCode();
 
 		freopen_s(&stream, "cfg.vcg", "w", stdout);
-	//	freopen("cfg.vcg", "w", stdout);
-		parser.outputVCGFile();
-		parser.outputDominatorTree();
+		parser->outputVCGFile();
+
+/* */ 	freopen_s(&stream, "cfg after step2.vcg", "w", stdout);
+		step2.outputVCGFile();
+	
 	}
 	catch (SyntaxException exception)
 	{

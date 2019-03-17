@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
+    <ClInclude Include="DLXProcessor.h" />
     <ClInclude Include="EliminateRedundency.h" />
     <ClInclude Include="FileReader.h" />
     <ClInclude Include="RegisterAllocator.h" />
@@ -125,6 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="DLXProcessor.cpp" />
     <ClCompile Include="EliminateRedundency.cpp" />
     <ClCompile Include="FileReader.cpp" />
     <ClCompile Include="Logger.cpp" />

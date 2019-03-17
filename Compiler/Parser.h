@@ -36,24 +36,30 @@ private:
 	Result expression();
 	IntermediateCode relation();
 
-	std::vector<string> cachedIdentifierList;
+//	std::vector<string> cachedIdentifierList;
 	vector<int> cachedVersionTable;
-	unordered_map<string, int> cachedIdentifierHashMap;
+	vector<int> cachedGlobalVersionTable;
+//	unordered_map<string, int> cachedIdentifierHashMap;
+
+	Scope *global;
+	vector<Scope *> functions;
+	Scope *currentScope;
+
+	vector<string> functionCalls;
 	//indicates whether current statement is in else block or not
 	int phiFlag;   // 1 means ifBlock, 2 elseBlock, 3 whileBlock, 0 none
-	int whileStartAddr; 
-	
-
+	int whileStartAddr;   
+	pair<int,int> getInScopeID(int id);    //get the id number of current identifier token in current scope
 	void assignment();
-	void funcCall();
+	Result funcCall();
 	void ifStatement();
 	void whileStatement();
-	void returnStatement();
+	int returnStatement();
 
-	void statement();
-	void statSequence();
+	int statement();
+	int statSequence();
 
-	void typeDecl();
+	vector<int> typeDecl();
 	void varDecl();
 	void funcDecl();
 	void formalParam();
@@ -61,27 +67,48 @@ private:
 
 	void computation();
 
-	void InputNum();
+	Result createAndAddCode(int op, Result x, Result y);
+	Result createAndAddCode(string opcode, string x, string y);
+	Result createAndAddCode(string opcode, Result x, Result y);
+
+	Result InputNum();
 	void OutputNum(Result x);
+	void updateScope(vector<int> &dimension, Result &x);
+	Result accessArray(vector<Result> &dimension, Result x);
+	void determineType(Result &x);  // updateType if array
 
 	void OutputNewLine();
 	Result compute(int op, Result x, Result y);
 	BasicBlock *root;
 	BasicBlock *currentBlock;
 	stack<BasicBlock *> joinBlockStack;
-	
+
+	int getVersion(Result x);
+	void updateVersion(int id, int version, int isGlobal);
+	string getName(Result x);
+
+	void storeOldCachedVersion(vector<int> &versionTable, vector<int>& globalVersionTable);
+	void loadOldCachedVersion(vector<int> &versionTable, vector<int>& globalVersionTable);
+
+	void cacheVersionTable();
+	void restoreVersionTableFromCache();
+//	int isFunction(string identifier);
+	int functionNametoScopeId(string func);
+	void secondPass(BasicBlock *cfgNode = NULL);
+	void reOrderInstructions(int start, int end);
+	int getCachedVersion(Result x);
+	void insertKill(IntermediateCode instr);
+	void storeGlobalVars(string funcName);
+	void loadGlobalVars(string funcName);
+	void flushGlobalVariables();
+	void loadArguments();
 public:
 	Parser(Scanner *scanner);
-	void printIntermediateCode(IntermediateCode instr);
 	void Parse();
 	IntermediateCode createIntermediateCode(int op, Result x, Result y);
 	IntermediateCode createIntermediateCode(string opcode, Result x, Result y);
 	void printAllIntermediateCode();
 	void updatePhi(Result x);
-	void cacheVersionTable();
-	void storeOldCachedVersion(vector<string> & identifierList, unordered_map<string, int> &identifierHashMap, vector<int> &versionTable);
-	void loadOldCachedVersion(vector<string> & identifierList, unordered_map<string, int> &identifierHashMap, vector<int> &versionTable);
-	void restoreVersionTableFromCache();
 	void renameLoopOccurances(Result x, int newVersion);
 	void commitPhi(BasicBlock *joinBlock);
 	void printCodesByBlocks(BasicBlock *cfgNode=NULL);
@@ -90,5 +117,7 @@ public:
 	vector<IntermediateCode>& getIntermediateCodelist();
 	IntermediateCode getIntermediateCode(int address);
 	BasicBlock *getCFGTreeRoot();
+	pair<Scope*, vector<Scope*> > getScopeInfo();
+	void outputFunctionCalls();
 	void setRegisters(map<string, int> assignedRegisters);
 };
