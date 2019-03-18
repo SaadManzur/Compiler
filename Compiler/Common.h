@@ -90,6 +90,8 @@ public:
 	string operand[MAXOPERANDLENGTH];
 	long long version[MAXOPERANDLENGTH];
 	string operandType[MAXOPERANDLENGTH];
+	int registers[MAXOPERANDLENGTH];
+	int addressRegister;
 	int previousSameOp;
 	int blockId;
 
@@ -145,6 +147,9 @@ public:
 	std::set<int> globalVarsModifies;
 	std::set<int> globalVarsUses;
 	std::vector<int> arguments;
+	std::map<string, int> assignedRegisters;
+
+	void setRegisters(map<string, int> registers);
 };
 
 void printIntermediateCode(IntermediateCode instr);

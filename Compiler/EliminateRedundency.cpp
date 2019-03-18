@@ -403,7 +403,27 @@ void EliminateRedundency::outputVCGFile(BasicBlock * cfgNode)
 	}
 }
 
+IntermediateCode EliminateRedundency::getIntermediateCode(int address)
+{
+	return intermediateCodelist[address];
+}
+
+vector<IntermediateCode> EliminateRedundency::getIntermediateCodeList()
+{
+	return intermediateCodelist;
+}
+
 
 EliminateRedundency::~EliminateRedundency()
 {
+}
+
+vector<Scope*> EliminateRedundency::getFunctions()
+{
+	return functions;
+}
+
+Scope * EliminateRedundency::getGlobalScope()
+{
+	return global;
 }

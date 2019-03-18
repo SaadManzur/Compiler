@@ -1,0 +1,27 @@
+main
+var x, y, z;
+array [ 4 ] a;
+array [ 4 ][ 4 ] b;
+var c;
+function foo( );
+var i, d;
+{
+	let i <- 0;
+	while i < 10 do
+		let y <- y + 2;
+		let z <- x + 2;
+		let d <- y + z;
+		let i <- i + 1
+	od;
+	return d
+};
+
+{
+	let x <- 0;
+	let y <- 0;
+	let z <- 0;
+	
+	let c <- call foo;
+	
+	call OutputNum(c)
+}.

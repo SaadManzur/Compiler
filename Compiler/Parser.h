@@ -119,5 +119,6 @@ public:
 	BasicBlock *getCFGTreeRoot();
 	pair<Scope*, vector<Scope*> > getScopeInfo();
 	void outputFunctionCalls();
-	void setRegisters(map<string, int> assignedRegisters);
+	void setRegisters(Scope *function, map<string, int> assignedRegisters);
+	vector<Scope *> getFunctions();
 };

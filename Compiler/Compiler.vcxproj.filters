@@ -25,6 +25,9 @@
     <Filter Include="Register Allocator">
       <UniqueIdentifier>{81064865-f295-41fe-a0c4-7c3ecff2a642}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CodeGenerator">
+      <UniqueIdentifier>{31a97e28-c07e-4b69-a10f-bfa5fcf09e07}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Scanner.h">
@@ -50,6 +53,9 @@
     </ClInclude>
     <ClInclude Include="DLXProcessor.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CodeGenerator.h">
+      <Filter>CodeGenerator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +85,9 @@
     </ClCompile>
     <ClCompile Include="RegisterAllocator.cpp">
       <Filter>Register Allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="CodeGenerator.cpp">
+      <Filter>CodeGenerator</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,4 +1,5 @@
-main var f, g;
+main 
+var f, g;
 
 {
     let n <- 10;

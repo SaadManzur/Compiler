@@ -1,8 +1,8 @@
 #include "RegisterAllocator.h"
 
-RegisterAllocator::RegisterAllocator(const Parser &parser)
+RegisterAllocator::RegisterAllocator(EliminateRedundency *redundancyEliminator)
 {
-	this->parser = parser;
+	this->redundancyEliminator = redundancyEliminator;
 
 	for (int i = 0; i < NUMBER_OF_REGISTERS; i++)
 	{
@@ -99,9 +99,10 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 
 		int instructionAddress = node->instructionAddrList[i];
 
-		IntermediateCode instruction = parser.getIntermediateCode(instructionAddress);
+		IntermediateCode instruction = redundancyEliminator->getIntermediateCode(instructionAddress);
+		transform(instruction.opcode.begin(), instruction.opcode.end(), instruction.opcode.begin(), ::tolower);
 
-		if (instruction.opcode == "mov")
+		if ( instruction.opcode == "mov")
 		{
 			if (node->alive.find(instruction.getOperandRepresentation(1)) != node->alive.end())
 			{
@@ -112,16 +113,22 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 
 			generateEdgeBetween(instruction.getOperandRepresentation(1), node->alive);
 
-			if (instruction.operandType[0] == "var")
+			if (instruction.operandType[0] == "var" || instruction.operandType[0] == "IntermediateCode")
 			{
 				node->alive.insert(instruction.getOperandRepresentation(0));
 				cost[instruction.getOperandRepresentation(0)] += depth;
 			}
-			else if (instruction.operandType[0] == "IntermediateCode")
+		}
+		else if (instruction.opcode == "ldw")
+		{
+			if (node->alive.find(instruction.getOperandRepresentation(0)) != node->alive.end())
 			{
-				node->alive.insert(instruction.operand[0]);
-				cost[instruction.operand[0]] += depth;
+				node->alive.erase(instruction.getOperandRepresentation(0));
 			}
+
+			cost[instruction.getOperandRepresentation(0)] += (depth * 0.5);
+
+			generateEdgeBetween(instruction.getOperandRepresentation(0), node->alive);
 		}
 		else if (instruction.opcode == "phi")
 		{
@@ -149,19 +156,14 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 
 			node->loopPhiProcessed = true;
 		}
-		else
+		else if(instruction.opcode != "eliminated")
 		{
 			for (int j = 0; j < 3; j++)
 			{
-				if (instruction.operandType[j] == "var")
+				if (instruction.operandType[j] == "var" || instruction.operandType[j] == "IntermediateCode")
 				{
 					node->alive.insert(instruction.getOperandRepresentation(j));
 					cost[instruction.getOperandRepresentation(j)] += depth;
-				}
-				else if (instruction.operandType[j] == "IntermediateCode")
-				{
-					node->alive.insert(instruction.operand[j]);
-					cost[instruction.operand[j]] += depth;
 				}
 			}
 
@@ -249,12 +251,12 @@ void RegisterAllocator::assignColor(string node)
 
 	for (string adjacentNode : interferenceGraph[node])
 	{
-		registerInUse[assignedColors[adjacentNode]] = true;
+		registerInUse[assignedColors[adjacentNode]-1] = true;
 	}
 
-	for (int i = 0; i < NUMBER_OF_REGISTERS; i++)
+	for (int i = 1; i <= NUMBER_OF_REGISTERS; i++)
 	{
-		if (!registerInUse[i])
+		if (!registerInUse[i-1])
 		{
 			selectedRegister = i;
 			break;

@@ -73,10 +73,18 @@ void printIntermediateCode(IntermediateCode instr)
 }
 string IntermediateCode::getOperandRepresentation(int index)
 {
-	return operand[index] + "_" + to_string(version[index]);
+	if (operandType[index] == "var")
+		return operand[index] + "_" + to_string(version[index]);
+	else
+		return "(" + to_string(version[index]) + ")";
 }
 
 string IntermediateCode::getImmediateAddressRepresentation()
 {
 	return "(" + to_string(address) + ")";
+}
+
+void Scope::setRegisters(map<string, int> registers)
+{
+	assignedRegisters.insert(registers.begin(), registers.end());
 }

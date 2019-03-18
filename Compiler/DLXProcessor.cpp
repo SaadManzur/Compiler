@@ -9,7 +9,7 @@ using namespace std;
 
 // emulated memory
  // bytes in memory (divisible by 4)
- int DLXProcessor::M[MemSize / 4];
+ unsigned int DLXProcessor::M[MemSize / 4];
  const char **DLXProcessor::mnemo;
 
 DLXProcessor::DLXProcessor()
@@ -29,7 +29,7 @@ DLXProcessor::~DLXProcessor()
 {
 }
 
-void DLXProcessor::load( vector<int> &program)
+void DLXProcessor::load( vector<unsigned int> &program)
 {
 
 	int i;
