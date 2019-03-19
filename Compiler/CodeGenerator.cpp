@@ -177,6 +177,18 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 			code = dlxProcessor.assemble(dlxProcessor.LDW, instruction.addressRegister, instruction.registers[0], 0);
 		}
 	}
+	else if (instruction.opcode == "store")
+	{
+		if (instruction.operandType[0] == "const")
+		{
+			targetCodes.push_back(dlxProcessor.assemble(dlxProcessor.ADDI, RP1, 0, stoi(instruction.operand[0])));
+			code = dlxProcessor.assemble(dlxProcessor.STW, RP1, instruction.registers[1], 0);
+		}
+		else
+		{
+			code = dlxProcessor.assemble(dlxProcessor.STW, instruction.registers[0], instruction.registers[1], 0);
+		}
+	}
 	else if (instruction.opcode == "ldw")
 	{
 		if (instruction.addressRegister < 0 || instruction.addressRegister > 8)
@@ -236,18 +248,6 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 			code = dlxProcessor.assemble(dlxProcessor.POP, instruction.registers[0], SP, 4);
 		else
 			code = dlxProcessor.assemble(dlxProcessor.POP, RP1, SP, 4);
-	}
-	else if (instruction.opcode == "store")
-	{
-		if (instruction.operandType[0] == "const")
-		{
-			targetCodes.push_back(dlxProcessor.assemble(dlxProcessor.ADDI, RP1, 0, stoi(instruction.operand[0])));
-			code = dlxProcessor.assemble(dlxProcessor.STW, RP1, instruction.registers[1], 0);
-		}
-		else
-		{
-			code = dlxProcessor.assemble(dlxProcessor.STW, instruction.registers[0], instruction.registers[1], 0);
-		}
 	}
 	else if (instruction.opcode == "prologue")
 	{
