@@ -266,7 +266,7 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 	}
 	else if (instruction.opcode == "prologue")
 	{
-		prologue();
+		prologue(scopeNameMap[instruction.scopeName]->variableList.size());
 		backupRegisters(scopeNameMap[instruction.scopeName]);
 	}
 	else if (instruction.opcode == "epilogue")
