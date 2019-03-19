@@ -84,6 +84,11 @@ void CodeGenerator::integrateRegisterWithIntermediateCodes(Scope *currentScope)
 		if (currentScope->assignedRegisters.find(intermediateAddress) != currentScope->assignedRegisters.end())
 		{
 			instruction->addressRegister = currentScope->assignedRegisters[intermediateAddress];
+
+			if (instruction->addressRegister > 8)
+			{
+				proxyAddress.insert(pair<int, int>(instruction->addressRegister, 0));
+			}
 		}
 
 		if (instruction->opcode == "pop")
@@ -91,6 +96,11 @@ void CodeGenerator::integrateRegisterWithIntermediateCodes(Scope *currentScope)
 			string operand = instruction->getImmediateAddressRepresentation();
 
 			instruction->registers[0] = currentScope->assignedRegisters[operand];
+
+			if (instruction->registers[0] > 8)
+			{
+				proxyAddress.insert(pair<int, int>(instruction->registers[0], 0));
+			}
 		}
 
 		for (int i = 0; i < MAXOPERANDLENGTH; i++)
@@ -100,6 +110,11 @@ void CodeGenerator::integrateRegisterWithIntermediateCodes(Scope *currentScope)
 				string operand = instruction->getOperandRepresentation(i);
 
 				instruction->registers[i] = currentScope->assignedRegisters[operand];
+
+				if (instruction->registers[i] > 8)
+				{
+					proxyAddress.insert(pair<int,int>(instruction->registers[i], 0));
+				}
 			}
 		}
 	}
@@ -251,7 +266,7 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 	}
 	else if (instruction.opcode == "prologue")
 	{
-		prologue();
+		prologue(scopeNameMap[instruction.scopeName]->variableList.size());
 		backupRegisters(scopeNameMap[instruction.scopeName]);
 	}
 	else if (instruction.opcode == "epilogue")
@@ -294,6 +309,11 @@ void CodeGenerator::initialize()
 	}
 
 	totalGlobalSize += mainScope->variableList.size();
+
+	for (auto proxy : proxyAddress)
+	{
+		proxy.second = totalGlobalSize++;
+	}
 
 	code = dlxProcessor.assemble(dlxProcessor.ADDI, FP, 30, totalGlobalSize * -4);
 	targetCodes.push_back(code);
@@ -366,41 +386,83 @@ void CodeGenerator::restoreRegisters(Scope *currentScope)
 	}
 }
 
+void CodeGenerator::loadProxyRegister(int proxy, int virtualRegister)
+{
+	targetCodes.push_back(dlxProcessor.assemble(dlxProcessor.LDW, proxy, 30, proxyAddress[virtualRegister]));
+}
+
 int CodeGenerator::getAssignmentCode(IntermediateCode instruction)
 {
+	int register1 = instruction.registers[0];
+	int register2 = instruction.registers[1];
+
+	if (register1 > 8)
+	{
+		loadProxyRegister(RP1, register1);
+	}
+
+	if (register2 > 8)
+	{
+		loadProxyRegister(RP2, register2);
+	}
+
 	if (instruction.operandType[0] == "const")
 	{
-		return dlxProcessor.assemble(dlxProcessor.ADDI, instruction.registers[1], 0, stoi(instruction.operand[0]));
+		return dlxProcessor.assemble(dlxProcessor.ADDI, register2, 0, stoi(instruction.operand[0]));
 	}
 	else
 	{
-		return dlxProcessor.assemble(dlxProcessor.ADD, instruction.registers[1], instruction.registers[0], 0);
+		return dlxProcessor.assemble(dlxProcessor.ADD, register2, register1, 0);
 	}
 }
 
 int CodeGenerator::getMathCode(IntermediateCode instruction, int opcode)
 {
+	int register1, register2;
+
+	register1 = instruction.registers[0];
+	register2 = instruction.registers[1];
+	
+	int addressRegister = instruction.addressRegister;
+
+	if (register1 > 8)
+	{
+		targetCodes.push_back(dlxProcessor.assemble(dlxProcessor.LDW, RP1, 30, proxyAddress[register1] * -4));
+		register1 = RP1;
+	}
+
+	if (register2 > 8)
+	{
+		targetCodes.push_back(dlxProcessor.assemble(dlxProcessor.LDW, RP2, 30, proxyAddress[register2] * -4));
+		register2 = RP2;
+	}
+
+	if (addressRegister < 0 || addressRegister > 8)
+	{
+		addressRegister = RP2;
+	}
+
 	if (instruction.operandType[0] == "const" && instruction.operandType[1] == "const")
 	{
 		int result = stoi(instruction.operand[0]) * stoi(instruction.operand[1]);
 
-		return dlxProcessor.assemble(dlxProcessor.ADDI, instruction.addressRegister, 0, result);
+		return dlxProcessor.assemble(dlxProcessor.ADDI, addressRegister, 0, result);
 	}
 	else if (instruction.operandType[0] == "const")
 	{
-		return dlxProcessor.assemble(opcode + 16, instruction.addressRegister, instruction.registers[1], stoi(instruction.operand[0]));
+		return dlxProcessor.assemble(opcode + 16, addressRegister, register2, stoi(instruction.operand[0]));
 	}
 	else if (instruction.operandType[1] == "const")
 	{
-		return dlxProcessor.assemble(opcode + 16, instruction.addressRegister, instruction.registers[0], stoi(instruction.operand[1]));
+		return dlxProcessor.assemble(opcode + 16, addressRegister, register1, stoi(instruction.operand[1]));
 	}
 	else if (instruction.operandType[0] == "reg" && instruction.operandType[1] == "address")
 	{
-		return dlxProcessor.assemble(opcode + 16, instruction.addressRegister, 30, -4 * arrayBaseAddress[instruction.operand[1]]);
+		return dlxProcessor.assemble(opcode + 16, addressRegister, 30, -4 * arrayBaseAddress[instruction.operand[1]]);
 	}
 	else
 	{
-		return dlxProcessor.assemble(opcode, instruction.addressRegister, instruction.registers[0], instruction.registers[1]);
+		return dlxProcessor.assemble(opcode, addressRegister, register1, register2);
 	}
 }
 
@@ -441,6 +503,12 @@ int CodeGenerator::getBranchCode(IntermediateCode instruction)
 int CodeGenerator::getBranchCode(IntermediateCode instruction, int opcode)
 {
 	int wordOffset = stoi(instruction.operand[1]);
+
+	if (instruction.registers[0] > 8)
+	{
+		loadProxyRegister(RP1, instruction.registers[0]);
+		return dlxProcessor.assemble(opcode, RP1, wordOffset);
+	}
 
 	return dlxProcessor.assemble(opcode, instruction.registers[0], wordOffset);
 }

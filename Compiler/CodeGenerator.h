@@ -50,6 +50,7 @@ private:
 	void epilogue(int M);
 	void backupRegisters(Scope *currentScope);
 	void restoreRegisters(Scope *currentScope);
+	void loadProxyRegister(int proxy, int virtualRegister);
 
 	int getAssignmentCode(IntermediateCode instruction);
 	int getMathCode(IntermediateCode instruction, int opcode);

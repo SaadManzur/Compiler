@@ -4,35 +4,125 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-2 : mul 1 4 
-3 : add baseReg input_baseAddr 
-4 : adda (2) (3) 
-5 : store 22 (4) 
-6 : mul 2 4 
-7 : add baseReg input_baseAddr 
-8 : adda (6) (7) 
-9 : store 61 (8) 
-10 : mul 3 4 
-11 : add baseReg input_baseAddr 
-12 : adda (10) (11) 
-13 : store 17 (12) 
-14 : mul 1 4 
-15 : add baseReg input_baseAddr 
-16 : adda (14) (15) 
-17 : load (16)  
-18 : write (17)  
-19 : mul 2 4 
-20 : add baseReg input_baseAddr 
-21 : adda (19) (20) 
-22 : load (21)  
-23 : write (22)  
-24 : mul 3 4 
-25 : add baseReg input_baseAddr 
-26 : adda (24) (25) 
-27 : load (26)  
-28 : write (27)  
+50 : JSR 1  
+52 : LDW x_52  
+53 : LDW y_53  
+54 : push 1  
+55 : JSR 2  
+57 : LDW y_57  
+58 : mov 8 x_58 
+59 : mov 1790 y_59 
+60 : push x_58  
+61 : push y_59  
+62 : JSR 3  
+64 : STW x_58  
+65 : STW y_59  
+73 : push
+66 : push 2  
+67 : push 4  
+68 : JSR 4  
+69 : pop   
+70 : LDW x_70  
+71 : add y_59 (69) 
+72 : mov (71) y_72 
 ]"
 }node: {
+title: "1"
+label: "1[
+4 : prologue   
+5 : mov 1 a_5 
+6 : mov 2 b_6 
+7 : mov a_5 x_7 
+8 : mov b_6 y_8 
+9 : STW x_7  
+10 : STW y_8  
+11 : epilogue   
+]"
+}node: {
+title: "2"
+label: "2[
+15 : prologue   
+16 : LDS a_16 2 
+17 : mov 1 b_17 
+18 : mov 1 c_18 
+19 : mov b_17 y_19 
+20 : STW y_19  
+21 : epilogue   
+]"
+}node: {
+title: "3"
+label: "3[
+26 : prologue   
+27 : LDS a_27 3 
+28 : LDS b_28 2 
+29 : mov 1 c_29 
+30 : epilogue   
+]"
+}node: {
+title: "4"
+label: "4[
+34 : prologue   
+35 : LDS a_35 3 
+36 : LDS b_36 2 
+37 : mov 0 i_37 
+]"
+}edge: { sourcename: "4"  targetname: "5" color: blue }
+node: {
+title: "5"
+label: "5[
+44 : phi x_44 x_7 x_43
+38 : LDW y_38  
+39 : cmp i_37 y_38 
+40 : bge (39) 7 
+]"
+}edge: { sourcename: "5"  targetname: "6" color: blue }
+node: {
+title: "6"
+label: "6[
+41 : LDW x_41  
+42 : mul x_41 x_41 
+43 : mov (42) x_43 
+45 : bra 5  
+]"
+}edge: { sourcename: "6"  targetname: "5" color: blue }
+edge: { sourcename: "5"  targetname: "7" color: blue }
+node: {
+title: "7"
+label: "7[
+46 : add x_44 4 
+47 : STS (46) 4 
+48 : STW x_44  
+49 : epilogue   
+]"
+}edge: { sourcename: "0"  targetname: "1" color: Red }
+edge: { sourcename: "0"  targetname: "2" color: Red }
+edge: { sourcename: "0"  targetname: "3" color: Red }
+edge: { sourcename: "0"  targetname: "4" color: Red }
+node: {
 title: "00"
 label: "0"}
+node: {
+title: "01"
+label: "1"}
+node: {
+title: "02"
+label: "2"}
+node: {
+title: "03"
+label: "3"}
+node: {
+title: "04"
+label: "4"}
+edge: { sourcename: "04"  targetname: "05" color: green }
+node: {
+title: "05"
+label: "5"}
+edge: { sourcename: "05"  targetname: "06" color: green }
+node: {
+title: "06"
+label: "6"}
+edge: { sourcename: "05"  targetname: "07" color: green }
+node: {
+title: "07"
+label: "7"}
 }
