@@ -181,11 +181,22 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 	{
 		if (instruction.addressRegister < 0 || instruction.addressRegister > 8)
 		{
-			code = dlxProcessor.assemble(dlxProcessor.LDW, RP1, instruction.registers[0], 0);
+			code = dlxProcessor.assemble(dlxProcessor.LDW, RP1, FP, globalAddress[instruction.operand[0]] * -4);
 		}
 		else
 		{
-			code = dlxProcessor.assemble(dlxProcessor.LDX, instruction.addressRegister, FP, instruction.registers[0]);
+			code = dlxProcessor.assemble(dlxProcessor.LDW, instruction.addressRegister, FP, globalAddress[instruction.operand[0]] * -4);
+		}
+	}
+	else if (instruction.opcode == "stw")
+	{
+		if (instruction.addressRegister < 0 || instruction.addressRegister > 8)
+		{
+			code = dlxProcessor.assemble(dlxProcessor.LDW, RP1, FP, globalAddress[instruction.operand[0]] * -4);
+		}
+		else
+		{
+			code = dlxProcessor.assemble(dlxProcessor.LDW, instruction.addressRegister, FP, globalAddress[instruction.operand[0]] * -4);
 		}
 	}
 	else if (instruction.opcode == "lds")
@@ -262,12 +273,6 @@ void CodeGenerator::initialize()
 {
 	unsigned int code;
 	
-	/*for (int i = 0; i < mainScope->variableList.size(); i++)
-	{
-		code = dlxProcessor.assemble(dlxProcessor.STW, 0, 30, i*-4);
-		targetCodes.push_back(code);
-	}*/
-
 	int totalGlobalSize = 0;
 
 	for (int i = 0; i < mainScope->arrayList.size(); i++)
@@ -281,6 +286,11 @@ void CodeGenerator::initialize()
 		}
 
 		totalGlobalSize += totalArrayDimensions;
+	}
+
+	for (int i = 0; i < mainScope->variableList.size(); i++)
+	{
+		globalAddress[mainScope->variableList[i]] = totalGlobalSize + i;
 	}
 
 	totalGlobalSize += mainScope->variableList.size();

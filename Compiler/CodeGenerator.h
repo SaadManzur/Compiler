@@ -33,6 +33,7 @@ private:
 	map<string, Scope*> scopeNameMap;
 	map<int, IntermediateCode> branchInstructionsPending;
 	map<string, int> arrayBaseAddress;
+	map<string, int> globalAddress;
 	vector<unsigned int> targetCodes;
 	int currentCodeAddress;
 	bool dummyPushed = false;
