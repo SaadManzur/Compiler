@@ -22,6 +22,18 @@
     <Filter Include="Helper">
       <UniqueIdentifier>{af7cf571-20f4-493d-8c60-de1433b56f8b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Register Allocator">
+      <UniqueIdentifier>{81064865-f295-41fe-a0c4-7c3ecff2a642}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CodeGenerator">
+      <UniqueIdentifier>{31a97e28-c07e-4b69-a10f-bfa5fcf09e07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DLXProcessor">
+      <UniqueIdentifier>{019c05eb-a47a-42c7-81bc-d6b8c0325b07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EliminateRedundency">
+      <UniqueIdentifier>{73f6e61b-49d1-4784-a03f-3e6b43d64929}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Scanner.h">
@@ -39,11 +51,17 @@
     <ClInclude Include="Parser.h">
       <Filter>Parser</Filter>
     </ClInclude>
-    <ClInclude Include="EliminateRedundency.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="RegisterAllocator.h">
+      <Filter>Register Allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="CodeGenerator.h">
+      <Filter>CodeGenerator</Filter>
     </ClInclude>
     <ClInclude Include="DLXProcessor.h">
-      <Filter>Header Files</Filter>
+      <Filter>DLXProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="EliminateRedundency.h">
+      <Filter>EliminateRedundency</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -62,14 +80,20 @@
     <ClCompile Include="Parser.cpp">
       <Filter>Parser</Filter>
     </ClCompile>
-    <ClCompile Include="Common.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="RegisterAllocator.cpp">
+      <Filter>Register Allocator</Filter>
     </ClCompile>
-    <ClCompile Include="EliminateRedundency.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="CodeGenerator.cpp">
+      <Filter>CodeGenerator</Filter>
     </ClCompile>
     <ClCompile Include="DLXProcessor.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>DLXProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="Common.cpp">
+      <Filter>Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="EliminateRedundency.cpp">
+      <Filter>EliminateRedundency</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -4,116 +4,139 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-64 : mul 1 4 
-65 : add baseReg input_baseAddr 
-66 : adda (64) (65) 
-67 : store 22 (66) 
-68 : mul 2 4 
-70 : adda (68) (65) 
-71 : store 61 (70) 
-72 : mul 3 4 
-74 : adda (72) (65) 
-75 : store 17 (74) 
-76 : mul 4 4 
-78 : adda (76) (65) 
-79 : store 34 (78) 
-80 : mul 5 4 
-82 : adda (80) (65) 
-83 : store 11 (82) 
-86 : adda (64) (65) 
-87 : load (86)  
-90 : adda (68) (65) 
-91 : load (90)  
-94 : adda (72) (65) 
-95 : load (94)  
-98 : adda (76) (65) 
-99 : load (98)  
-102 : adda (80) (65) 
-103 : load (102)  
-113 : push
-104 : push (87)  
-105 : push (91)  
-106 : push (95)  
-107 : push (99)  
-108 : push (103)  
-109 : JSR 1  
-110 : pop   
-111 : LDW size_111  
+3 : mov 1 a_3 
+4 : mov 2 b_4 
+5 : mov 3 c_5 
 ]"
-}node: {
+}edge: { sourcename: "0"  targetname: "1" color: blue }
+node: {
 title: "1"
 label: "1[
-9 : prologue   
-10 : LDS a1_10 6 
-11 : LDS a2_11 5 
-12 : LDS a3_12 4 
-13 : LDS a4_13 3 
-14 : LDS a5_14 2 
-15 : mul 1 4 
-16 : add baseReg arg_baseAddr 
-17 : adda (15) (16) 
-18 : store a1_10 (17) 
-19 : mul 2 4 
-21 : adda (19) (16) 
-22 : store a2_11 (21) 
-23 : mul 3 4 
-25 : adda (23) (16) 
-26 : store a3_12 (25) 
-27 : mul 4 4 
-29 : adda (27) (16) 
-30 : store a4_13 (29) 
-31 : mul 5 4 
-33 : adda (31) (16) 
-34 : store a5_14 (33) 
-35 : mov 5 size_35 
-36 : mov 2 i_36 
-39 : adda (15) (16) 
-40 : load (39)  
+22 : phi b_22 b_4 b_20
+13 : phi c_13 c_5 (11)
+10 : phi a_10 a_3 (8)
+6 : cmp a_10 b_22 
+7 : bge (6) 6 
 ]"
 }edge: { sourcename: "1"  targetname: "2" color: blue }
 node: {
 title: "2"
 label: "2[
-59 : phi i_59 i_36 (57)
-56 : phi temp_56 (40) temp_55
-42 : cmp i_59 size_35 
-43 : bgt (42) 6 
+8 : add a_10 1 
+11 : add c_13 1 
+14 : write (8)  
 ]"
 }edge: { sourcename: "2"  targetname: "3" color: blue }
 node: {
 title: "3"
 label: "3[
-44 : mul i_59 4 
-46 : adda (44) (16) 
-47 : load (46)  
-48 : cmp (47) temp_56 
-49 : ble (48) 5 
+20 : phi b_20 b_22 (18)
+15 : cmp b_20 (11) 
+16 : bge (15) 5 
 ]"
 }edge: { sourcename: "3"  targetname: "4" color: blue }
 node: {
 title: "4"
 label: "4[
+17 : write (11)  
+18 : add b_20 1 
+21 : bra 3  
 ]"
-}edge: { sourcename: "4"  targetname: "5" color: blue }
+}edge: { sourcename: "4"  targetname: "3" color: blue }
+edge: { sourcename: "3"  targetname: "5" color: blue }
 node: {
 title: "5"
 label: "5[
-55 : phi temp_55 (47) temp_56
-57 : add i_59 1 
-60 : bra 2  
+23 : bra 1  
 ]"
-}edge: { sourcename: "5"  targetname: "2" color: blue }
-edge: { sourcename: "3"  targetname: "5" color: blue }
-edge: { sourcename: "2"  targetname: "6" color: blue }
+}edge: { sourcename: "5"  targetname: "1" color: blue }
+edge: { sourcename: "1"  targetname: "6" color: blue }
 node: {
 title: "6"
 label: "6[
-61 : STS temp_56 7 
-62 : STW size_35  
-63 : epilogue   
+24 : write a_10  
+25 : write b_22  
+26 : write c_13  
 ]"
-}edge: { sourcename: "0"  targetname: "1" color: Red }
-node: {
+}node: {
 title: "00"
 label: "0"}
+edge: { sourcename: "00"  targetname: "01" color: green }
+node: {
+title: "01"
+label: "1"}
+edge: { sourcename: "01"  targetname: "02" color: green }
+node: {
+title: "02"
+label: "2"}
+edge: { sourcename: "02"  targetname: "03" color: green }
+node: {
+title: "03"
+label: "3"}
+edge: { sourcename: "03"  targetname: "04" color: green }
+node: {
+title: "04"
+label: "4"}
+edge: { sourcename: "03"  targetname: "05" color: green }
+node: {
+title: "05"
+label: "5"}
+edge: { sourcename: "01"  targetname: "06" color: green }
+node: {
+title: "06"
+label: "6"}
 }
+-----------Node Traverse Order--------------
+6
+1
+5
+3
+4
+3
+4
+3
+2
+1
+5
+3
+2
+1
+0
+
+Still alive : 0
+
+------------Interference Graph--------------
+Total nodes: 12
+(11): (15) (18) (6) (8) a_10 b_20 b_22 c_13 
+(15): (11) (18) (8) b_20 b_22 
+(18): (11) (15) (8) b_20 
+(6): (11) (8) a_10 a_3 b_20 b_22 b_4 c_13 c_5 
+(8): (11) (15) (18) (6) a_10 b_20 b_22 c_13 
+a_10: (11) (6) (8) a_3 b_20 b_22 b_4 c_13 c_5 
+a_3: (6) a_10 b_22 b_4 c_13 c_5 
+b_20: (11) (15) (18) (6) (8) a_10 b_22 c_13 
+b_22: (11) (15) (6) (8) a_10 a_3 b_20 b_4 c_13 c_5 
+b_4: (6) a_10 a_3 b_22 c_13 c_5 
+c_13: (11) (6) (8) a_10 a_3 b_20 b_22 b_4 c_5 
+c_5: (6) a_10 a_3 b_22 b_4 c_13 
+------------Interference Graph--------------
+Total nodes: 12
+(11): (15) (18) (6) (8) a_10 b_20 b_22 c_13 
+(15): (11) (18) (8) b_20 b_22 
+(18): (11) (15) (8) b_20 
+(6): (11) (8) a_10 a_3 b_20 b_22 b_4 c_13 c_5 
+(8): (11) (15) (18) (6) a_10 b_20 b_22 c_13 
+a_10: (11) (6) (8) a_3 b_20 b_22 b_4 c_13 c_5 
+a_3: (6) a_10 b_22 b_4 c_13 c_5 
+b_20: (11) (15) (18) (6) (8) a_10 b_22 c_13 
+b_22: (11) (15) (6) (8) a_10 a_3 b_20 b_4 c_13 c_5 
+b_4: (6) a_10 a_3 b_22 c_13 c_5 
+c_13: (11) (6) (8) a_10 a_3 b_20 b_22 b_4 c_5 
+c_5: (6) a_10 a_3 b_22 b_4 c_13 
+----------------Clusters------------------
+C1: a_10 
+C2: c_13 
+C3: b_22 
+C4: b_20 
+
+-----------------Coloring-------------------

@@ -1,10 +1,6 @@
 #include "EliminateRedundency.h"
 #include<cassert>
 
-
-
-
-
 EliminateRedundency::EliminateRedundency(Parser *parser)
 {
 	this->parser = parser;
@@ -407,7 +403,37 @@ void EliminateRedundency::outputVCGFile(BasicBlock * cfgNode)
 	}
 }
 
+IntermediateCode EliminateRedundency::getIntermediateCode(int address)
+{
+	return intermediateCodelist[address];
+}
+
+vector<IntermediateCode> EliminateRedundency::getIntermediateCodeList()
+{
+	return intermediateCodelist;
+}
+
 
 EliminateRedundency::~EliminateRedundency()
 {
+}
+
+vector<Scope*> EliminateRedundency::getFunctions()
+{
+	return functions;
+}
+
+Scope * EliminateRedundency::getGlobalScope()
+{
+	return global;
+}
+
+IntermediateCode EliminateRedundency::createIntermediateCode(string opcode, Result x, Result y)
+{
+	return parser->createIntermediateCode(opcode, x, y);
+}
+
+void EliminateRedundency::insertIntermediateCode(IntermediateCode instruction)
+{
+	intermediateCodelist.push_back(instruction);
 }

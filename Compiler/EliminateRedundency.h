@@ -37,6 +37,11 @@ public:
 //	void copyCFG(BasicBlock *root);
 	void printCodesByBlocks(BasicBlock *cfgNode = NULL);
 	void outputVCGFile(BasicBlock *cfgNode = NULL);
+	IntermediateCode getIntermediateCode(int address);
+	vector<IntermediateCode> getIntermediateCodeList();
 	~EliminateRedundency();
+	vector<Scope *> getFunctions();
+	Scope* getGlobalScope();
+	IntermediateCode createIntermediateCode(string opcode, Result x, Result y);
+	void insertIntermediateCode(IntermediateCode instruction);
 };
-

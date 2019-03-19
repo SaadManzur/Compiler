@@ -115,15 +115,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CodeGenerator.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="DLXProcessor.h" />
     <ClInclude Include="EliminateRedundency.h" />
     <ClInclude Include="FileReader.h" />
+    <ClInclude Include="RegisterAllocator.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="Scanner.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CodeGenerator.cpp" />
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="DLXProcessor.cpp" />
     <ClCompile Include="EliminateRedundency.cpp" />
@@ -131,6 +134,7 @@
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="RegisterAllocator.cpp" />
     <ClCompile Include="Scanner.cpp" />
   </ItemGroup>
   <ItemGroup>

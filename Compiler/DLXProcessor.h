@@ -13,10 +13,10 @@ public:
 
 	// emulated memory
 	 // bytes in memory (divisible by 4)
-	static int M[MemSize / 4];
+	static unsigned int M[MemSize / 4];
 
 	static const char **mnemo;
-	 static void load(std::vector<int> &program);
+	 static void load(std::vector<unsigned int> &program);
 
 	 static void execute();
 

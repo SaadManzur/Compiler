@@ -35,6 +35,21 @@ void BasicBlock::addInstructionInBegining(IntermediateCode instr)
 	instructionAddrList.insert(instructionAddrList.begin(), instr.address);
 }
 
+void BasicBlock::addInstructionAtPosition(IntermediateCode instr, int i)
+{
+	instructionAddrList.insert(instructionAddrList.begin() + i, instr.address);
+}
+
+void BasicBlock::removeInstruction(IntermediateCode instruction)
+{
+	vector<int>::iterator it = find(instructionAddrList.begin(), instructionAddrList.end(), instruction.address);
+
+	if (it != instructionAddrList.end())
+	{
+		instructionAddrList.erase(it);
+	}
+}
+
 int BasicBlock::blockSerialNumber = 0;
 
 BasicBlock::BasicBlock()
@@ -60,4 +75,22 @@ void printIntermediateCode(IntermediateCode instr)
 			cout << '_' << instr.version[i];
 	}
 	cout << endl;
+}
+
+string IntermediateCode::getOperandRepresentation(int index)
+{
+	if (operandType[index] == "var")
+		return operand[index] + "_" + to_string(version[index]);
+	else
+		return "(" + to_string(version[index]) + ")";
+}
+
+string IntermediateCode::getImmediateAddressRepresentation()
+{
+	return "(" + to_string(address) + ")";
+}
+
+void Scope::setRegisters(map<string, int> registers)
+{
+	assignedRegisters.insert(registers.begin(), registers.end());
 }

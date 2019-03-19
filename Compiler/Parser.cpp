@@ -392,6 +392,7 @@ void Parser::ifStatement()
 			Next();
 
 			BasicBlock *joinBlock = new BasicBlock();
+			joinBlock->isJoinBlock = true;
 			joinBlockStack.push(joinBlock);
 			
 			phiFlag = 1;
@@ -468,6 +469,7 @@ void Parser::whileStatement()
 	if (symbol == whileToken)
 	{
 		BasicBlock *joinBlock = new BasicBlock();
+		joinBlock->isLoopHeader = true;
 		joinBlockStack.push(joinBlock);
 
 		currentBlock->next.push_back(joinBlock);
@@ -1035,9 +1037,31 @@ Parser::Parser(Scanner *scanner)
 			BasicBlock * nextBlock = (BasicBlock *)(instr.version[i]);
 			instr.operand[i] = to_string(nextBlock->id);
 		}
-		cout << ' ' << instr.operand[i];
-		if (instr.operandType[i].compare("var") == 0)
-			cout << '_' << instr.version[i];
+
+		if (assignedRegisters.empty())
+		{
+			cout << ' ' << instr.operand[i];
+			if (instr.operandType[i].compare("var") == 0)
+				cout << '_' << instr.version[i];
+		}
+		else
+		{
+			string operand = instr.operand[i];
+
+			if (instr.operandType[i].compare("var") == 0)
+			{
+				operand += "_" + to_string(instr.version[i]);
+			}
+				
+			if (instr.operandType[i] == "var" || instr.operandType[i] == "IntermediateCode")
+			{
+				cout << " R" << assignedRegisters[operand];
+			}
+			else
+			{
+				cout << ' ' << instr.operand[i];
+			}
+		}
 	}
 	cout <<endl;
 }*/
@@ -1063,27 +1087,42 @@ IntermediateCode Parser::createIntermediateCode(int op, Result x, Result y)
 	instr.address = currentCodeAddress++;
 
 	switch (op) {
-	case plusToken: instr.opcode = "add";
+	case plusToken: 
+		instr.opcode = "add";
+		instr.iOpcode = 0;
 		break;
-	case minusToken: instr.opcode = "sub";
+	case minusToken: 
+		instr.opcode = "sub";
+		instr.iOpcode = 1;
 		break;
-	case timesToken: instr.opcode = "mul";
+	case timesToken: 
+		instr.opcode = "mul";
+		instr.iOpcode = 2;
 		break;
-	case divToken: instr.opcode = "div";
+	case divToken: 
+		instr.opcode = "div";
+		instr.iOpcode = 3;
 		break;
-	case becomesToken: instr.opcode = "mov";
+	case becomesToken: 
+		instr.opcode = "mov";
 		break;
-	case eqlToken: instr.opcode = "bne";
+	case eqlToken: 
+		instr.opcode = "bne";
 		break;
-	case neqToken: instr.opcode = "beq";
+	case neqToken: 
+		instr.opcode = "beq";
 		break;
-	case lssToken: instr.opcode = "bge";
+	case lssToken: 
+		instr.opcode = "bge";
 		break;
-	case geqToken: instr.opcode = "blt";
+	case geqToken: 
+		instr.opcode = "blt";
 		break;
-	case leqToken: instr.opcode = "bgt";
+	case leqToken: 
+		instr.opcode = "bgt";
 		break;
-	case gtrToken: instr.opcode = "ble";
+	case gtrToken: 
+		instr.opcode = "ble";
 		break;
 	}
 
@@ -1554,7 +1593,6 @@ void Parser::printCodesByBlocks(BasicBlock *cfgNode)
 		{
 			printCodesByBlocks(cfgNode->next[i]);
 		}
-			
 	}
 }
 
@@ -1639,6 +1677,11 @@ vector<IntermediateCode>& Parser::getIntermediateCodelist()
 	return intermediateCodelist;
 }
 
+IntermediateCode Parser::getIntermediateCode(int address)
+{
+	return intermediateCodelist[address];
+}
+
 BasicBlock * Parser::getCFGTreeRoot()
 {
 	return root;
@@ -1653,4 +1696,19 @@ void Parser::outputFunctionCalls()
 {
 	for (int i = 0; i < functionCalls.size(); i++)
 		cout << functionCalls[i];
+}
+
+void Parser::setRegisters(Scope *function, map<string, int> assignedRegisters)
+{
+	function->assignedRegisters.insert(assignedRegisters.begin(), assignedRegisters.end());
+}
+
+vector<Scope*> Parser::getFunctions()
+{
+	return functions;
+}
+
+int Parser::getCurrentCodeAddress()
+{
+	return currentCodeAddress;
 }

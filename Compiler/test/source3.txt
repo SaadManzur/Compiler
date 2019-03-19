@@ -1,0 +1,20 @@
+main var f, g;
+
+{
+   
+    let f <- 1;
+
+    let x <- 3;
+    InputNum();
+    if f==0 then
+	let x <- 5;
+	let f <- x+1*2
+    else
+	let x <- 2;
+	let f <- 3*x-2*3
+    fi;
+
+
+    OutputNum(f);
+    OutputNewLine()
+}.
