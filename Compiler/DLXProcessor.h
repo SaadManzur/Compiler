@@ -1,7 +1,7 @@
 #pragma once
 #include<string>
 #include<vector>
-#define MemSize 10000
+#define MemSize 1000
 
 class DLXProcessor
 {
@@ -16,9 +16,9 @@ public:
 	static unsigned int M[MemSize / 4];
 
 	static const char **mnemo;
-	 static void load(std::vector<unsigned int> &program);
+	static void load(std::vector<unsigned int> &program);
 
-	 static void execute();
+	static void execute();
 
 	// Mnemonic-to-Opcode mapping
 	
@@ -75,9 +75,9 @@ public:
 	static const int ERR = 63; // error opcode which is insertered by loader 
 							   // after end of program code
 
-	static void disassem(int instructionWord);
+	static void disassem(unsigned int instructionWord);
 
-	static std::string disassemble(int instructionWord);
+	static std::string disassemble(unsigned int instructionWord);
 
 	static int assemble(int op);
 

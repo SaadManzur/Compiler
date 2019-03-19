@@ -31,6 +31,7 @@ private:
 	map<int, int> blockFirstInstructionAddress;
 	map<string, int> scopeStartingAddressInMemory;
 	map<string, Scope*> scopeNameMap;
+	map<int, IntermediateCode> branchInstructionsPending;
 	vector<unsigned int> targetCodes;
 	int currentCodeAddress;
 
@@ -43,6 +44,8 @@ private:
 	void initialize();
 	void prologue(int N = 4);
 	void epilogue(int M);
+	void backupRegisters(Scope *currentScope);
+	void restoreRegisters(Scope *currentScope);
 
 	int getAssignmentCode(IntermediateCode instruction);
 	int getMathCode(IntermediateCode instruction, int opcode);

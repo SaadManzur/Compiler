@@ -7,8 +7,15 @@ var a, b;
 	let b <- 2;
 	call OutputNum(a)
 };
+procedure baz( a, b );
+var c, d;
 {
-	call foo( );
+	let c <- 1;
+	call OutputNum(a)
+};
+{
+	let x <- call baz( 1, 2 );
+	call OutputNum(x);
 	let x <- 3 + 7 - 2;
 	let y <- ( 895 * 2 * 2 ) / 2
 }

@@ -6,8 +6,6 @@ void CodeGenerator::generateControlFlow(Scope *currentScope)
 	set<BasicBlock *> visited;
 	dominatedStack.push(currentScope->root);
 
-	scopeStartingAddressInMemory[currentScope->functionName] = intermediateTargetCodeCandidates.size();
-
 	scopeNameMap.insert(pair<string, Scope*>(currentScope->functionName, currentScope));
 
 	cout << "---------------Generating Control Flow----------------------" << endl;
@@ -68,7 +66,10 @@ void CodeGenerator::processBlockLastInstructionIfBranching(int address, int offs
 	{
 		IntermediateCode *instruction = &intermediateTargetCodeCandidates[address];
 
-		instruction->operand[0] = to_string((scopeStartingAddressInMemory[instruction->operand[0]] + offset)*4);
+		if (scopeStartingAddressInMemory.find(instruction->operand[0]) == scopeStartingAddressInMemory.end())
+			instruction->operand[1] = "-1";
+		else
+			instruction->operand[0] = to_string(scopeStartingAddressInMemory[instruction->operand[0]]*4);
 	}
 }
 
@@ -108,6 +109,9 @@ void CodeGenerator::generateCode()
 void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 {
 	transform(instruction.opcode.begin(), instruction.opcode.end(), instruction.opcode.begin(), ::tolower);
+
+	if (scopeStartingAddressInMemory.find(instruction.scopeName) == scopeStartingAddressInMemory.end())
+		scopeStartingAddressInMemory[instruction.scopeName] = targetCodes.size();
 
 	unsigned int code = 0;
 
@@ -151,16 +155,38 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 	{
 		code = dlxProcessor.assemble(dlxProcessor.LDW, instruction.registers[0], instruction.registers[1], stoi(instruction.operand[2]));
 	}
+	else if (instruction.opcode == "lds")
+	{
+		code = dlxProcessor.assemble(dlxProcessor.LDW, instruction.registers[0], FP, stoi(instruction.operand[1]) * 4);
+	}
 	else if (instruction.opcode == "jsr")
 	{
-		code = dlxProcessor.assemble(dlxProcessor.JSR, stoi(instruction.operand[0]));
+		if (stoi(instruction.operand[1]) == -1)
+		{
+			branchInstructionsPending.insert(pair<int, IntermediateCode>(targetCodes.size(), instruction));
+			code = dlxProcessor.assemble(dlxProcessor.JSR, 0);
+		}
+		else
+			code = dlxProcessor.assemble(dlxProcessor.JSR, stoi(instruction.operand[0]));
+	}
+	else if (instruction.opcode == "push")
+	{
+		if (instruction.operandType[0] == "const")
+		{
+			targetCodes.push_back(dlxProcessor.assemble(dlxProcessor.ADDI, RP1, 0, stoi(instruction.operand[0])));
+			instruction.registers[0] = RP1;
+		}
+
+		code = dlxProcessor.assemble(dlxProcessor.PSH, instruction.registers[0], SP, -4);
 	}
 	else if (instruction.opcode == "prologue")
 	{
 		prologue();
+		backupRegisters(scopeNameMap[instruction.scopeName]);
 	}
 	else if (instruction.opcode == "epilogue")
 	{
+		restoreRegisters(scopeNameMap[instruction.scopeName]);
 		epilogue(scopeNameMap[instruction.scopeName]->numOfArg);
 	}
 	else if (instruction.opcode == "end")
@@ -168,7 +194,7 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 		code = dlxProcessor.assemble(dlxProcessor.RET, 0);
 	}
 
-	if (code > 0)
+	if(code > 0)
 		targetCodes.push_back(code);
 
 }
@@ -210,12 +236,42 @@ void CodeGenerator::epilogue(int M)
 
 	code = dlxProcessor.assemble(dlxProcessor.POP, FP, SP, SP_OFFSET);
 	targetCodes.push_back(code);
-
+	
 	code = dlxProcessor.assemble(dlxProcessor.POP, 31, SP, 4 + M);
 	targetCodes.push_back(code);
 
 	code = dlxProcessor.assemble(dlxProcessor.RET, 31);
 	targetCodes.push_back(code);
+}
+
+void CodeGenerator::backupRegisters(Scope *currentScope)
+{
+	bool pushed[9];
+	memset(pushed, false, 9);
+
+	for (auto reg : currentScope->assignedRegisters)
+	{
+		if (reg.second <= 8 && !pushed[int(reg.second)])
+		{
+			targetCodes.push_back(dlxProcessor.assemble(dlxProcessor.PSH, int(reg.second), SP, -SP_OFFSET));
+			pushed[int(reg.second)] = true;
+		}
+	}
+}
+
+void CodeGenerator::restoreRegisters(Scope *currentScope)
+{
+	bool popped[9];
+	memset(popped, false, 9);
+
+	for (auto reg : currentScope->assignedRegisters)
+	{
+		if (reg.second <= 8 && !popped[int(reg.second)])
+		{
+			targetCodes.push_back(dlxProcessor.assemble(dlxProcessor.POP, int(reg.second), SP, SP_OFFSET));
+			popped[int(reg.second)] = true;
+		}
+	}
 }
 
 int CodeGenerator::getAssignmentCode(IntermediateCode instruction)
@@ -463,6 +519,13 @@ void CodeGenerator::generate()
 	processBranchingInstructions();
 
 	generateCode();
+
+	for (auto pending : branchInstructionsPending)
+	{
+		pending.second.operand[0] = to_string(scopeStartingAddressInMemory[pending.second.operand[0]] * 4);
+
+		targetCodes[pending.first] = dlxProcessor.assemble(dlxProcessor.JSR, stoi(pending.second.operand[0]));
+	}
 
 	printTargetCode();
 }
