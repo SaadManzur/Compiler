@@ -594,68 +594,6 @@ bool RegisterAllocator::aExistsInBDominatorTree(BasicBlock *nodeA, BasicBlock *n
 		return true;
 
 	return aExistsInBDominatorTree(nodeA, nodeB->dominatedBy);
-
-}
-
-int RegisterAllocator::tryMerge(string c1, string c2)
-{
-	for (auto it1 = clusters[c1].begin(); it1 != clusters[c1].end(); it1++)
-	{
-		for (auto it2 = clusters[c2].begin(); it2 != clusters[c2].end(); it2++)
-		{
-			if (it1->compare(*it2) == 0)
-			{
-				clusters[c1].insert(clusters[c2].begin(), clusters[c2].end());
-				if(interferenceGraph[c1].find(c2)!=interferenceGraph[c1].end())
-					interferenceGraph[c1].erase(c2);
-				if (interferenceGraph[c2].find(c1) != interferenceGraph[c2].end())
-					interferenceGraph[c2].erase(c1);
-				interferenceGraph[c1].insert(interferenceGraph[c2].begin(), interferenceGraph[c2].end());
-				interferenceGraph.erase(c2);
-				clusters.erase(c2);
-
-				for (auto it = interferenceGraph.begin(); it != interferenceGraph.end(); it++)
-				{
-					if (it->second.find(c2) != it->second.end())
-					{
-						it->second.erase(c2);
-						it->second.insert(c1);
-					}
-						
-				}
-			/**/	return 1;
-			}
-				
-		}
-	}
-	return 0;
-}
-
-int RegisterAllocator::mergeClusters()
-{
-	for (auto it1 = clusters.begin(); it1!=clusters.end(); it1++)
-	{
-		auto it2 = it1;
-		for (it2++; it2 != clusters.end(); it2++)
-		{
-			if (tryMerge(it1->first, it2->first))
-				return 1;
-		}
-	}
-	return 0;
-}
-
-string RegisterAllocator::getClusterName(string x)
-{
-	for (auto it = clusters.begin(); it != clusters.end(); it++)
-	{
-		for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++)
-		{
-			if (it2->compare(x) == 0)
-				return it->first;
-		}
-	}
-	return x;
 }
 
 int RegisterAllocator::tryMerge(string c1, string c2)
@@ -774,4 +712,39 @@ void RegisterAllocator::start(BasicBlock *root)
 	printAssignedRegisters();
 
 	eliminatePhi();
+}
+
+void RegisterAllocator::fillParentBlocksDFS(BasicBlock * root)
+{
+	if (root == NULL)
+		return;
+
+	visited.insert(root);
+
+	for (int address : root->instructionAddrList)
+	{
+		instructionBlocks[address] = root;
+	}
+
+	if (root->next.size() == 0)
+		outerMostBlock = root;
+
+	/*	for (auto childBlock : root->next)
+		{
+			childBlock->back.push_back(root);
+		}
+		*/
+	for (auto dominatedBlock : root->dominates)
+	{
+		dominatedBlock->dominatedBy = root;
+	}
+
+	for (int i = 0; i < root->next.size(); i++)
+	{
+		root->next[i]->back.push_back(root);
+		if (visited.find(root->next[i]) == visited.end())
+		{
+			fillParentBlocksDFS(root->next[i]);
+		}
+	}
 }
