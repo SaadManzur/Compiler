@@ -1671,6 +1671,8 @@ void Parser::outputDominatorTree(BasicBlock * cfgNode)
 	}
 	if (cfgNode == root)
 	{
+		for (int i = 0; i < functions.size(); i++)
+			outputDominatorTree(functions[i]->root);
 		cout << "}";
 	}
 }
