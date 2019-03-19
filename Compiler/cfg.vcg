@@ -4,115 +4,35 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-33 : read
-34 : mov (33) input_34 
-45 : push
-35 : push input_34  
-36 : JSR 1  
-37 : pop   
-38 : write (37)  
-39 : writeNL
-46 : push
-40 : push input_34  
-41 : JSR 5  
-42 : pop   
-43 : write (42)  
-44 : writeNL
+2 : mul 1 4 
+3 : add baseReg input_baseAddr 
+4 : adda (2) (3) 
+5 : store 22 (4) 
+6 : mul 2 4 
+7 : add baseReg input_baseAddr 
+8 : adda (6) (7) 
+9 : store 61 (8) 
+10 : mul 3 4 
+11 : add baseReg input_baseAddr 
+12 : adda (10) (11) 
+13 : store 17 (12) 
+14 : mul 1 4 
+15 : add baseReg input_baseAddr 
+16 : adda (14) (15) 
+17 : load (16)  
+18 : write (17)  
+19 : mul 2 4 
+20 : add baseReg input_baseAddr 
+21 : adda (19) (20) 
+22 : load (21)  
+23 : write (22)  
+24 : mul 3 4 
+25 : add baseReg input_baseAddr 
+26 : adda (24) (25) 
+27 : load (26)  
+28 : write (27)  
 ]"
 }node: {
-title: "1"
-label: "1[
-4 : prologue   
-5 : LDS n_5 2 
-6 : mov 1 i_6 
-7 : mov 1 f_7 
-]"
-}edge: { sourcename: "1"  targetname: "2" color: blue }
-node: {
-title: "2"
-label: "2[
-15 : phi i_15 i_6 i_14
-12 : phi f_12 f_7 f_11
-8 : cmp i_15 n_5 
-9 : bgt (8) 4 
-]"
-}edge: { sourcename: "2"  targetname: "3" color: blue }
-node: {
-title: "3"
-label: "3[
-10 : mul f_12 i_15 
-11 : mov (10) f_11 
-13 : add i_15 1 
-14 : mov (13) i_14 
-16 : bra 2  
-]"
-}edge: { sourcename: "3"  targetname: "2" color: blue }
-edge: { sourcename: "2"  targetname: "4" color: blue }
-node: {
-title: "4"
-label: "4[
-17 : STS f_12 3 
-18 : epilogue   
-]"
-}node: {
-title: "5"
-label: "5[
-20 : prologue   
-21 : LDS n_21 2 
-22 : cmp n_21 1 
-23 : bgt (22) 7 
-]"
-}edge: { sourcename: "5"  targetname: "6" color: blue }
-node: {
-title: "6"
-label: "6[
-24 : STS 1 3 
-25 : epilogue   
-]"
-}edge: { sourcename: "6"  targetname: "7" color: blue }
-node: {
-title: "7"
-label: "7[
-26 : sub n_21 1 
-47 : push
-27 : push (26)  
-28 : JSR 5  
-29 : pop   
-30 : mul (29) n_21 
-31 : STS (30) 3 
-32 : epilogue   
-]"
-}edge: { sourcename: "5"  targetname: "7" color: blue }
-edge: { sourcename: "0"  targetname: "1" color: Red }
-edge: { sourcename: "0"  targetname: "5" color: Red }
-edge: { sourcename: "7"  targetname: "5" color: Red }
-node: {
 title: "00"
 label: "0"}
-node: {
-title: "01"
-label: "1"}
-edge: { sourcename: "01"  targetname: "02" color: green }
-node: {
-title: "02"
-label: "2"}
-edge: { sourcename: "02"  targetname: "03" color: green }
-node: {
-title: "03"
-label: "3"}
-edge: { sourcename: "02"  targetname: "04" color: green }
-node: {
-title: "04"
-label: "4"}
-node: {
-title: "05"
-label: "5"}
-edge: { sourcename: "05"  targetname: "06" color: green }
-node: {
-title: "06"
-label: "6"}
-edge: { sourcename: "05"  targetname: "07" color: green }
-node: {
-title: "07"
-label: "7"}
 }

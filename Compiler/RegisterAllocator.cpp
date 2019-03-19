@@ -1,6 +1,6 @@
 #include "RegisterAllocator.h"
 
-RegisterAllocator::RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress)
+RegisterAllocator::RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress, int proxyRegisterStart)
 {
 	this->currentCodeAddress = currentCodeAddress;
 	this->redundancyEliminator = redundancyEliminator;
@@ -9,6 +9,8 @@ RegisterAllocator::RegisterAllocator(EliminateRedundency *redundancyEliminator, 
 	{
 		registers[i] = "R" + to_string(i + 1);
 	}
+
+	lastVirtualRegisterNumber = proxyRegisterStart;
 }
 
 void RegisterAllocator::generateInterferenceGraph(BasicBlock* root)
@@ -70,6 +72,7 @@ void RegisterAllocator::calculateLiveRange(BasicBlock *node, set<string> alive, 
 	}
 
 	calculateLiveRangeForBlock(node);
+	node->loopCounter = 0;
 
 	if (node->isJoinBlock)
 	{
@@ -125,7 +128,7 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 				cost[instruction.getOperandRepresentation(0)] += depth;
 			}
 		}
-		else if (instruction.opcode == "ldw")
+		else if (instruction.opcode == "pop")
 		{
 			if (node->alive.find(instruction.getOperandRepresentation(0)) != node->alive.end())
 			{
@@ -591,7 +594,6 @@ bool RegisterAllocator::aExistsInBDominatorTree(BasicBlock *nodeA, BasicBlock *n
 		return true;
 
 	return aExistsInBDominatorTree(nodeA, nodeB->dominatedBy);
-
 }
 
 int RegisterAllocator::tryMerge(string c1, string c2)
@@ -655,82 +657,6 @@ string RegisterAllocator::getClusterName(string x)
 	return x;
 }
 
-
-
-void RegisterAllocator::fillParentBlocksDFS(BasicBlock * root)
-{
-	if (root == NULL)
-		return;
-
-	visited.insert(root);
-
-	for (int address : root->instructionAddrList)
-	{
-		instructionBlocks[address] = root;
-	}
-
-	if (root->next.size() == 0)
-		outerMostBlock = root;
-
-/*	for (auto childBlock : root->next)
-	{
-		childBlock->back.push_back(root);
-	}
-	*/
-	for (auto dominatedBlock : root->dominates)
-	{
-		dominatedBlock->dominatedBy = root;
-	}
-
-	for (int i = 0; i < root->next.size(); i++)
-	{
-		root->next[i]->back.push_back(root);
-		if (visited.find(root->next[i]) == visited.end())
-		{
-			fillParentBlocksDFS(root->next[i]);
-		}
-	}
-
-
-/*
-
-	while (!blocks.empty())
-	{
-		BasicBlock *currentBlock = blocks.front();
-		blocks.pop();
-
-		if (visited.find(currentBlock) != visited.end())
-		{
-			continue;
-		}
-
-		visited.insert(currentBlock);
-
-		for (int address : currentBlock->instructionAddrList)
-		{
-			instructionBlocks[address] = currentBlock;
-		}
-
-		if (currentBlock->next.size() == 0)
-			outerMostBlock = currentBlock;
-
-		for (auto childBlock : currentBlock->next)
-		{
-			childBlock->back.push_back(currentBlock);
-
-			if (visited.find(childBlock) == visited.end())
-			{
-				blocks.push(childBlock);
-			}
-		}
-
-		for (auto dominatedBlock : currentBlock->dominates)
-		{
-			dominatedBlock->dominatedBy = currentBlock;
-		}
-	}*/
-}
-
 string RegisterAllocator::getAssignedRegister(string operand)
 {
 	return "R" + to_string(assignedColors[operand]);
@@ -749,6 +675,11 @@ vector<IntermediateCode> RegisterAllocator::getInstructionsToBeEliminated()
 int RegisterAllocator::getCurrentCodeAddress()
 {
 	return currentCodeAddress;
+}
+
+int RegisterAllocator::getLastVirtualRegisterNumber()
+{
+	return lastVirtualRegisterNumber;
 }
 
 void RegisterAllocator::start(BasicBlock *root)
@@ -781,4 +712,39 @@ void RegisterAllocator::start(BasicBlock *root)
 	printAssignedRegisters();
 
 	eliminatePhi();
+}
+
+void RegisterAllocator::fillParentBlocksDFS(BasicBlock * root)
+{
+	if (root == NULL)
+		return;
+
+	visited.insert(root);
+
+	for (int address : root->instructionAddrList)
+	{
+		instructionBlocks[address] = root;
+	}
+
+	if (root->next.size() == 0)
+		outerMostBlock = root;
+
+	/*	for (auto childBlock : root->next)
+		{
+			childBlock->back.push_back(root);
+		}
+		*/
+	for (auto dominatedBlock : root->dominates)
+	{
+		dominatedBlock->dominatedBy = root;
+	}
+
+	for (int i = 0; i < root->next.size(); i++)
+	{
+		root->next[i]->back.push_back(root);
+		if (visited.find(root->next[i]) == visited.end())
+		{
+			fillParentBlocksDFS(root->next[i]);
+		}
+	}
 }

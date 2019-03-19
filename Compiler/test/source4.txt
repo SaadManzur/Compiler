@@ -1,23 +1,14 @@
 main
-var x, y;
-procedure foo( );
-var a, b;
+array[5] input;
+var maxnumber,size;
 {
-	let a <- 1;
-	let b <- 2;
-	call OutputNum(a)
-};
-function baz( a, b );
-var c, d;
-{
-	let c <- 1;
-	call OutputNum(a);
-	return c
-};
-{
-	let x <- call baz( 1, 2 );
-	call OutputNum(x);
-	let x <- 3 + 7 - 2;
-	let y <- ( 895 * 2 * 2 ) / 2
+        let        input[1] <- 22;
+        let        input[2] <- 61;
+        let        input[3] <- 17;
+        
+        call OutputNum(input[1]);
+	call OutputNum(input[2]);
+	call OutputNum(input[3])
+        
 }
 .

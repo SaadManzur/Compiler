@@ -254,7 +254,7 @@ void DLXProcessor::execute()
 
 }
 
-void DLXProcessor::disassem(int instructionWord)
+void DLXProcessor::disassem(unsigned int instructionWord)
 {
 	op = (unsigned)instructionWord >> 26; // without sign extension
 	switch (op) {
@@ -331,7 +331,7 @@ void DLXProcessor::disassem(int instructionWord)
 	}
 }
 
-std::string DLXProcessor::disassemble(int instructionWord)
+std::string DLXProcessor::disassemble(unsigned int instructionWord)
 {
 	disassem(instructionWord);
 	string line = string(mnemo[op]) + "  ";

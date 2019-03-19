@@ -62,12 +62,13 @@ private:
 	void fillParentBlocksDFS(BasicBlock *root);
 
 public:
-	RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress=0);
+	RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress=0, int proxyRegisterStart=100);
 
 	string getAssignedRegister(string operand);
 	map<string, int> getAllAssignedRegisters();
 	vector<IntermediateCode> getInstructionsToBeEliminated();
 	int getCurrentCodeAddress();
+	int getLastVirtualRegisterNumber();
 
 	void start(BasicBlock *root);
 };
