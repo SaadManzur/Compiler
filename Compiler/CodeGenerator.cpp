@@ -130,6 +130,10 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 	{
 		code = getMathCode(instruction, dlxProcessor.ADD);
 	}
+	else if (instruction.opcode == "adda")
+	{
+		code = getMathCode(instruction, dlxProcessor.ADD);
+	}
 	else if (instruction.opcode == "sub")
 	{
 		code = getMathCode(instruction, dlxProcessor.SUB);
@@ -162,9 +166,27 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 	{
 		code = dlxProcessor.assemble(dlxProcessor.RDI, instruction.registers[0]);
 	}
+	else if (instruction.opcode == "load")
+	{
+		if (instruction.addressRegister < 0 || instruction.addressRegister > 8)
+		{
+			code = dlxProcessor.assemble(dlxProcessor.LDW, RP1, instruction.registers[0], 0);
+		}
+		else
+		{
+			code = dlxProcessor.assemble(dlxProcessor.LDW, instruction.addressRegister, instruction.registers[0], 0);
+		}
+	}
 	else if (instruction.opcode == "ldw")
 	{
-		code = dlxProcessor.assemble(dlxProcessor.LDW, instruction.registers[0], instruction.registers[1], stoi(instruction.operand[2]));
+		if (instruction.addressRegister < 0 || instruction.addressRegister > 8)
+		{
+			code = dlxProcessor.assemble(dlxProcessor.LDW, RP1, instruction.registers[0], 0);
+		}
+		else
+		{
+			code = dlxProcessor.assemble(dlxProcessor.LDX, instruction.addressRegister, FP, instruction.registers[0]);
+		}
 	}
 	else if (instruction.opcode == "lds")
 	{
@@ -199,11 +221,22 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 	}
 	else if (instruction.opcode == "pop")
 	{
-		code = dlxProcessor.assemble(dlxProcessor.POP, instruction.registers[0], SP, 4);
+		if(instruction.registers[0] > 0 && instruction.registers[0] < 8)
+			code = dlxProcessor.assemble(dlxProcessor.POP, instruction.registers[0], SP, 4);
+		else
+			code = dlxProcessor.assemble(dlxProcessor.POP, RP1, SP, 4);
 	}
 	else if (instruction.opcode == "store")
 	{
-		code = dlxProcessor.assemble(dlxProcessor.STW, instruction.registers[0], instruction.registers[1], 0);
+		if (instruction.operandType[0] == "const")
+		{
+			targetCodes.push_back(dlxProcessor.assemble(dlxProcessor.ADDI, RP1, 0, stoi(instruction.operand[0])));
+			code = dlxProcessor.assemble(dlxProcessor.STW, RP1, instruction.registers[1], 0);
+		}
+		else
+		{
+			code = dlxProcessor.assemble(dlxProcessor.STW, instruction.registers[0], instruction.registers[1], 0);
+		}
 	}
 	else if (instruction.opcode == "prologue")
 	{
@@ -228,10 +261,33 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 void CodeGenerator::initialize()
 {
 	unsigned int code;
-		
-	code = dlxProcessor.assemble(dlxProcessor.ADD, FP, 30, 0);
-	targetCodes.push_back(code);
 	
+	/*for (int i = 0; i < mainScope->variableList.size(); i++)
+	{
+		code = dlxProcessor.assemble(dlxProcessor.STW, 0, 30, i*-4);
+		targetCodes.push_back(code);
+	}*/
+
+	int totalGlobalSize = 0;
+
+	for (int i = 0; i < mainScope->arrayList.size(); i++)
+	{
+		arrayBaseAddress[mainScope->arrayList[i] + "_baseAddr"] = totalGlobalSize;
+
+		int totalArrayDimensions = 1;
+		for (int j = 0; j < mainScope->arrayDimensions[i].size(); j++)
+		{
+			totalArrayDimensions *= mainScope->arrayDimensions[i][j];
+		}
+
+		totalGlobalSize += totalArrayDimensions;
+	}
+
+	totalGlobalSize += mainScope->variableList.size();
+
+	code = dlxProcessor.assemble(dlxProcessor.ADDI, FP, 30, totalGlobalSize * -4);
+	targetCodes.push_back(code);
+
 	code = dlxProcessor.assemble(dlxProcessor.ADD, SP, FP, 0);
 	targetCodes.push_back(code);
 }
@@ -314,13 +370,23 @@ int CodeGenerator::getAssignmentCode(IntermediateCode instruction)
 
 int CodeGenerator::getMathCode(IntermediateCode instruction, int opcode)
 {
-	if (instruction.operandType[0] == "const")
+	if (instruction.operandType[0] == "const" && instruction.operandType[1] == "const")
+	{
+		int result = stoi(instruction.operand[0]) * stoi(instruction.operand[1]);
+
+		return dlxProcessor.assemble(dlxProcessor.ADDI, instruction.addressRegister, 0, result);
+	}
+	else if (instruction.operandType[0] == "const")
 	{
 		return dlxProcessor.assemble(opcode + 16, instruction.addressRegister, instruction.registers[1], stoi(instruction.operand[0]));
 	}
 	else if (instruction.operandType[1] == "const")
 	{
 		return dlxProcessor.assemble(opcode + 16, instruction.addressRegister, instruction.registers[0], stoi(instruction.operand[1]));
+	}
+	else if (instruction.operandType[0] == "reg" && instruction.operandType[1] == "address")
+	{
+		return dlxProcessor.assemble(opcode + 16, instruction.addressRegister, 30, -4 * arrayBaseAddress[instruction.operand[1]]);
 	}
 	else
 	{

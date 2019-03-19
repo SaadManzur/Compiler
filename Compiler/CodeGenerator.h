@@ -32,6 +32,7 @@ private:
 	map<string, int> scopeStartingAddressInMemory;
 	map<string, Scope*> scopeNameMap;
 	map<int, IntermediateCode> branchInstructionsPending;
+	map<string, int> arrayBaseAddress;
 	vector<unsigned int> targetCodes;
 	int currentCodeAddress;
 	bool dummyPushed = false;
