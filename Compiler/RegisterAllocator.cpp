@@ -190,12 +190,15 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 
 void RegisterAllocator::generateEdgeBetween(string variable, set<string> alive)
 {
-	interferenceGraph[variable].insert(string());
-
 	for (string element : alive)
 	{
 		interferenceGraph[variable].insert(element);
 		interferenceGraph[element].insert(variable);
+	}
+
+	if (interferenceGraph.find(variable) == interferenceGraph.end())
+	{
+		interferenceGraph[variable].insert(string());
 	}
 }
 
@@ -262,7 +265,8 @@ void RegisterAllocator::assignColor(string node)
 
 	for (string adjacentNode : interferenceGraph[node])
 	{
-		registerInUse[assignedColors[adjacentNode]-1] = true;
+		if(adjacentNode != "")
+			registerInUse[assignedColors[adjacentNode]-1] = true;
 	}
 
 	for (int i = 1; i <= NUMBER_OF_REGISTERS; i++)
