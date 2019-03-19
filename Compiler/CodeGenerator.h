@@ -42,7 +42,7 @@ private:
 	void generateControlFlow(Scope *currentScope);
 	void processBranchingInstructions(int fromAddress=0);
 	void processBlockLastInstructionIfBranching(int address, int offset);
-	void integrateRegisterWithIntermediateCodes(Scope *currentScope);
+	void integrateRegisterWithIntermediateCodes(Scope *currentScope, int fromAddress=0);
 	void generateCode();
 	void generateCodeForInstruction(IntermediateCode instruction);
 	void initialize();

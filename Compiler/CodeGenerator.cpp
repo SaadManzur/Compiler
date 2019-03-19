@@ -73,9 +73,9 @@ void CodeGenerator::processBlockLastInstructionIfBranching(int address, int offs
 	}
 }
 
-void CodeGenerator::integrateRegisterWithIntermediateCodes(Scope *currentScope)
+void CodeGenerator::integrateRegisterWithIntermediateCodes(Scope *currentScope, int fromAddress)
 {
-	for (int i = 0; i < intermediateTargetCodeCandidates.size(); i++)
+	for (int i = fromAddress; i < intermediateTargetCodeCandidates.size(); i++)
 	{
 		IntermediateCode *instruction = &intermediateTargetCodeCandidates[i];
 
@@ -87,7 +87,9 @@ void CodeGenerator::integrateRegisterWithIntermediateCodes(Scope *currentScope)
 
 			if (instruction->addressRegister > 8)
 			{
-				proxyAddress.insert(pair<int, int>(instruction->addressRegister, 0));
+				proxyAddress.insert(pair<int, int>(instruction->addressRegister, mainScope->virtualRegisters.size()));
+
+				mainScope->virtualRegisters.push_back(instruction->addressRegister);
 			}
 		}
 
@@ -99,7 +101,9 @@ void CodeGenerator::integrateRegisterWithIntermediateCodes(Scope *currentScope)
 
 			if (instruction->registers[0] > 8)
 			{
-				proxyAddress.insert(pair<int, int>(instruction->registers[0], 0));
+				proxyAddress.insert(pair<int, int>(instruction->registers[0], mainScope->virtualRegisters.size()));
+
+				mainScope->virtualRegisters.push_back(instruction->registers[0]);
 			}
 		}
 
@@ -113,7 +117,9 @@ void CodeGenerator::integrateRegisterWithIntermediateCodes(Scope *currentScope)
 
 				if (instruction->registers[i] > 8)
 				{
-					proxyAddress.insert(pair<int,int>(instruction->registers[i], 0));
+					proxyAddress.insert(pair<int,int>(instruction->registers[i], mainScope->virtualRegisters.size()));
+
+					mainScope->virtualRegisters.push_back(instruction->registers[i]);
 				}
 			}
 		}
@@ -309,11 +315,6 @@ void CodeGenerator::initialize()
 	}
 
 	totalGlobalSize += mainScope->variableList.size();
-
-	for (auto proxy : proxyAddress)
-	{
-		proxy.second = totalGlobalSize++;
-	}
 
 	code = dlxProcessor.assemble(dlxProcessor.ADDI, FP, 30, totalGlobalSize * -4);
 	targetCodes.push_back(code);
@@ -681,7 +682,7 @@ void CodeGenerator::generate()
 	{
 		generateControlFlow(function);
 
-		integrateRegisterWithIntermediateCodes(function);
+		integrateRegisterWithIntermediateCodes(function, fromAddress);
 
 		fromAddress = intermediateTargetCodeCandidates.size();
 	}

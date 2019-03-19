@@ -151,6 +151,7 @@ public:
 	std::set<int> globalVarsUses;
 	std::vector<int> arguments;
 	std::map<string, int> assignedRegisters;
+	std::vector<int> virtualRegisters;
 
 	void setRegisters(map<string, int> registers);
 };

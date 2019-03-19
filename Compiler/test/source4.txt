@@ -1,14 +1,14 @@
 main
-array[5] input;
-var maxnumber,size;
+var a, b;
+function foo( );
+var i;
 {
-        let        input[1] <- 22;
-        let        input[2] <- 61;
-        let        input[3] <- 17;
-        
-        call OutputNum(input[1]);
-	call OutputNum(input[2]);
-	call OutputNum(input[3])
-        
-}
-.
+	let a <- 5;
+	return a
+};
+{
+	let a <- 2;
+	let b <- call foo;
+	call OutputNum(b);
+	call OutputNum(a)
+}.
