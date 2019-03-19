@@ -24,6 +24,7 @@ private:
 	vector<IntermediateCode> intermediateTargetCodeCandidates;
 	map<int, int> blockFirstInstructionAddress;
 	vector<unsigned int> targetCodes;
+	int currentCodeAddress;
 
 	void generateControlFlow();
 	void processBranchingInstructions();
@@ -38,13 +39,15 @@ private:
 	int getBranchCode(IntermediateCode instruction, int opcode);
 
 	void printControlFlow(Scope *currentScope);
-	void printIntermediateCodes(BasicBlock *block, Scope *currentScope);
+	void addIntermediateCodes(BasicBlock *block, Scope *currentScope);
 	void printIntermediateCode(IntermediateCode instruction, Scope *currentScope);
 	void printIntermediateTargetCode(IntermediateCode instruction, Scope *currentScope);
 	void printTargetCode(bool verbose = true);
 	string getRegisterIfAssigned(string operand, Scope *currentScope);
+	IntermediateCode createInstruction(string opcode, string operands[MAXOPERANDLENGTH], int versions[MAXOPERANDLENGTH]);
 public:
-	CodeGenerator(Scope *mainScope, vector<Scope *> functions, vector<IntermediateCode> intermediateCodeList);
+	CodeGenerator(Scope *mainScope, vector<Scope *> functions, vector<IntermediateCode> intermediateCodeList, int currentCodeAddress=0);
 
 	void generate();
+	void execute();
 };

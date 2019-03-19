@@ -29,6 +29,7 @@ private:
 	map<string, int> assignedColors;
 	vector<Result> aliveValues;
 	EliminateRedundency *redundancyEliminator = NULL;
+	int currentCodeAddress;
 
 	void generateInterferenceGraph(BasicBlock *root);
 	void calculateLiveRange(BasicBlock* node, set<string> alive, int depth = 1);
@@ -40,10 +41,13 @@ private:
 	string getNodeWithDegreeLessThanN();
 	void assignColor(string node);
 	string spillRegisterAndGetNode();
-	void eliminatePhi();
+	void coalsceLiveRanges();
 	void replaceNodeWithCluster(string node, string clusterId, set<string> edges);
 	void applyClusterColor();
-	void eliminateInstructions();
+	void eliminatePhi();
+	IntermediateCode createMoveInstruction(IntermediateCode *instruction, int i, int j);
+	int getFirstBranchingWithinBlock(BasicBlock *block);
+	void addInstructionToParent(IntermediateCode instruction, BasicBlock *parent);
 	
 	void fillParentBlocks(BasicBlock *root);
 	void printParents(BasicBlock* root, set<BasicBlock*> visited);
@@ -52,11 +56,12 @@ private:
 	void printClusters();
 	bool aExistsInBDominatorTree(BasicBlock *nodeA, BasicBlock *nodeB);
 public:
-	RegisterAllocator(EliminateRedundency *redundancyEliminator);
+	RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress=0);
 
 	string getAssignedRegister(string operand);
 	map<string, int> getAllAssignedRegisters();
 	vector<IntermediateCode> getInstructionsToBeEliminated();
+	int getCurrentCodeAddress();
 
 	void start(BasicBlock *root);
 };

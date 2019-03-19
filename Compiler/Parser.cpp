@@ -392,6 +392,7 @@ void Parser::ifStatement()
 			Next();
 
 			BasicBlock *joinBlock = new BasicBlock();
+			joinBlock->isJoinBlock = true;
 			joinBlockStack.push(joinBlock);
 			
 			phiFlag = 1;
@@ -1705,4 +1706,9 @@ void Parser::setRegisters(Scope *function, map<string, int> assignedRegisters)
 vector<Scope*> Parser::getFunctions()
 {
 	return functions;
+}
+
+int Parser::getCurrentCodeAddress()
+{
+	return currentCodeAddress;
 }

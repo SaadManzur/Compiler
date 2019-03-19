@@ -121,4 +121,5 @@ public:
 	void outputFunctionCalls();
 	void setRegisters(Scope *function, map<string, int> assignedRegisters);
 	vector<Scope *> getFunctions();
+	int getCurrentCodeAddress();
 };

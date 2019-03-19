@@ -20,7 +20,7 @@ void CodeGenerator::generateControlFlow()
 
 		controlFlow.push_back(currentBlock);
 		
-		printIntermediateCodes(currentBlock, mainScope);
+		addIntermediateCodes(currentBlock, mainScope);
 
 		for (int i = currentBlock->dominates.size() - 1; i >= 0; i--)
 		{
@@ -31,12 +31,9 @@ void CodeGenerator::generateControlFlow()
 
 void CodeGenerator::processBranchingInstructions()
 {
-	for (auto blockInstructionPair : blockFirstInstructionAddress)
+	for (int i = 0; i < intermediateTargetCodeCandidates.size(); i++)
 	{
-		if (blockInstructionPair.second != 0)
-		{
-			processBlockLastInstructionIfBranching(blockInstructionPair.second - 1);
-		}
+		processBlockLastInstructionIfBranching(i);
 	}
 }
 
@@ -134,6 +131,10 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 	{
 		code = dlxProcessor.assemble(dlxProcessor.WRD, instruction.registers[0]);
 	}
+	else if (instruction.opcode == "end")
+	{
+		code = dlxProcessor.assemble(dlxProcessor.RET, 0);
+	}
 
 	if (code > 0)
 		targetCodes.push_back(code);
@@ -164,7 +165,7 @@ int CodeGenerator::getMathCode(IntermediateCode instruction, int opcode)
 	}
 	else
 	{
-		return dlxProcessor.assemble(opcode + 16, instruction.addressRegister, instruction.registers[0], instruction.registers[1]);
+		return dlxProcessor.assemble(opcode, instruction.addressRegister, instruction.registers[0], instruction.registers[1]);
 	}
 }
 
@@ -219,7 +220,7 @@ void CodeGenerator::printControlFlow(Scope * currentScope)
 	}
 }
 
-void CodeGenerator::printIntermediateCodes(BasicBlock * block, Scope *currentScope)
+void CodeGenerator::addIntermediateCodes(BasicBlock * block, Scope *currentScope)
 {
 	blockFirstInstructionAddress[block->id] = intermediateTargetCodeCandidates.size();
 
@@ -233,6 +234,17 @@ void CodeGenerator::printIntermediateCodes(BasicBlock * block, Scope *currentSco
 
 			printIntermediateCode(instruction, currentScope);
 		}
+	}
+
+	if (block->next.size() == 0)
+	{
+		string operands[MAXOPERANDLENGTH];
+		int versions[MAXOPERANDLENGTH];
+
+		IntermediateCode instruction = createInstruction("end", operands, versions);
+		intermediateCodeList.push_back(instruction);
+
+		intermediateTargetCodeCandidates.push_back(instruction);
 	}
 }
 
@@ -324,11 +336,32 @@ string CodeGenerator::getRegisterIfAssigned(string operand, Scope *currentScope)
 	return "NA";
 }
 
-CodeGenerator::CodeGenerator(Scope * mainScope, vector<Scope*> functions, vector<IntermediateCode> intermediateCodeList)
+IntermediateCode CodeGenerator::createInstruction(string opcode, string operands[MAXOPERANDLENGTH], int versions[MAXOPERANDLENGTH])
+{
+	IntermediateCode instruction;
+
+	instruction.opcode = opcode;
+	instruction.address = currentCodeAddress++;
+
+	for (int i = 0; i < MAXOPERANDLENGTH; i++)
+	{
+		instruction.operand[0] = operands[i];
+	}
+
+	for (int i = 0; i < MAXOPERANDLENGTH; i++)
+	{
+		instruction.version[i] = versions[i];
+	}
+
+	return instruction;
+}
+
+CodeGenerator::CodeGenerator(Scope * mainScope, vector<Scope*> functions, vector<IntermediateCode> intermediateCodeList, int currentCodeAddress)
 {
 	this->mainScope = mainScope;
 	this->functions.insert(this->functions.begin(), functions.begin(), functions.end());
 	this->intermediateCodeList.insert(this->intermediateCodeList.begin(), intermediateCodeList.begin(), intermediateCodeList.end());
+	this->currentCodeAddress = currentCodeAddress;
 }
 
 void CodeGenerator::generate()
@@ -342,8 +375,15 @@ void CodeGenerator::generate()
 	generateCode();
 
 	printTargetCode();
+}
+
+void CodeGenerator::execute()
+{
+	cout << "-----------------Executing---------------------" << endl;
 
 	dlxProcessor.load(targetCodes);
 
 	dlxProcessor.execute();
+
+	cout << endl << "-----------------------------------------------" << endl;
 }

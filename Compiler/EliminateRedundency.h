@@ -42,5 +42,6 @@ public:
 	~EliminateRedundency();
 	vector<Scope *> getFunctions();
 	Scope* getGlobalScope();
+	IntermediateCode createIntermediateCode(string opcode, Result x, Result y);
+	void insertIntermediateCode(IntermediateCode instruction);
 };
-

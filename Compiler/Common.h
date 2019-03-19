@@ -116,6 +116,7 @@ public:
 	int id;
 	bool liveRangeGenerated = false;
 	bool isLoopHeader = false;
+	bool isJoinBlock = false;
 	bool loopPhiProcessed = false;
 	int loopCounter = 0;
 	vector<int> instructionAddrList;
@@ -128,6 +129,7 @@ public:
 	vector<BasicBlock *> back;
 	void addInstruction(IntermediateCode instr);
 	void addInstructionInBegining(IntermediateCode instr);
+	void addInstructionAtPosition(IntermediateCode instr, int i);
 	void removeInstruction(IntermediateCode instruction);
 	BasicBlock();
 };
