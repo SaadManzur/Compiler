@@ -68,6 +68,7 @@ void RegisterAllocator::calculateLiveRange(BasicBlock *node, set<string> alive, 
 	}
 
 	calculateLiveRangeForBlock(node);
+	node->loopCounter = 0;
 
 	if (node->isJoinBlock)
 	{
