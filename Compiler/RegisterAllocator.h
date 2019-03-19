@@ -30,6 +30,7 @@ private:
 	vector<Result> aliveValues;
 	EliminateRedundency *redundancyEliminator = NULL;
 	int currentCodeAddress;
+	set<BasicBlock*> visited;
 
 	void generateInterferenceGraph(BasicBlock *root);
 	void calculateLiveRange(BasicBlock* node, set<string> alive, int depth = 1);
@@ -58,6 +59,8 @@ private:
 	int tryMerge(string c1, string c2);
 	int mergeClusters();
 	string getClusterName(string x);
+	void fillParentBlocksDFS(BasicBlock *root);
+
 public:
 	RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress=0);
 
