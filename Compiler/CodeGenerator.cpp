@@ -86,6 +86,13 @@ void CodeGenerator::integrateRegisterWithIntermediateCodes(Scope *currentScope)
 			instruction->addressRegister = currentScope->assignedRegisters[intermediateAddress];
 		}
 
+		if (instruction->opcode == "pop")
+		{
+			string operand = instruction->getImmediateAddressRepresentation();
+
+			instruction->registers[0] = currentScope->assignedRegisters[operand];
+		}
+
 		for (int i = 0; i < MAXOPERANDLENGTH; i++)
 		{
 			if (instruction->operandType[i] == "var" || instruction->operandType[i] == "IntermediateCode")
@@ -151,6 +158,10 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 	{
 		code = dlxProcessor.assemble(dlxProcessor.WRD, instruction.registers[0]);
 	}
+	else if (instruction.opcode == "read")
+	{
+		code = dlxProcessor.assemble(dlxProcessor.RDI, instruction.registers[0]);
+	}
 	else if (instruction.opcode == "ldw")
 	{
 		code = dlxProcessor.assemble(dlxProcessor.LDW, instruction.registers[0], instruction.registers[1], stoi(instruction.operand[2]));
@@ -158,6 +169,10 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 	else if (instruction.opcode == "lds")
 	{
 		code = dlxProcessor.assemble(dlxProcessor.LDW, instruction.registers[0], FP, stoi(instruction.operand[1]) * 4);
+	}
+	else if (instruction.opcode == "sts")
+	{
+		code = dlxProcessor.assemble(dlxProcessor.STW, instruction.registers[0], FP, -stoi(instruction.operand[1]) * 4);
 	}
 	else if (instruction.opcode == "jsr")
 	{
@@ -176,8 +191,19 @@ void CodeGenerator::generateCodeForInstruction(IntermediateCode instruction)
 			targetCodes.push_back(dlxProcessor.assemble(dlxProcessor.ADDI, RP1, 0, stoi(instruction.operand[0])));
 			instruction.registers[0] = RP1;
 		}
-
+		else if (instruction.operandType[0] == "")
+		{
+			instruction.registers[0] = 0;
+		}
 		code = dlxProcessor.assemble(dlxProcessor.PSH, instruction.registers[0], SP, -4);
+	}
+	else if (instruction.opcode == "pop")
+	{
+		code = dlxProcessor.assemble(dlxProcessor.POP, instruction.registers[0], SP, 4);
+	}
+	else if (instruction.opcode == "store")
+	{
+		code = dlxProcessor.assemble(dlxProcessor.STW, instruction.registers[0], instruction.registers[1], 0);
 	}
 	else if (instruction.opcode == "prologue")
 	{

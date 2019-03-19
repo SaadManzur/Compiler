@@ -34,6 +34,7 @@ private:
 	map<int, IntermediateCode> branchInstructionsPending;
 	vector<unsigned int> targetCodes;
 	int currentCodeAddress;
+	bool dummyPushed = false;
 
 	void generateControlFlow(Scope *currentScope);
 	void processBranchingInstructions(int fromAddress=0);

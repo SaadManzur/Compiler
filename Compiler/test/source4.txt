@@ -7,11 +7,12 @@ var a, b;
 	let b <- 2;
 	call OutputNum(a)
 };
-procedure baz( a, b );
+function baz( a, b );
 var c, d;
 {
 	let c <- 1;
-	call OutputNum(a)
+	call OutputNum(a);
+	return c
 };
 {
 	let x <- call baz( 1, 2 );

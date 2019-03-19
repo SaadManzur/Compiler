@@ -1,7 +1,7 @@
 #pragma once
 #include<string>
 #include<vector>
-#define MemSize 1000
+#define MemSize 10000
 
 class DLXProcessor
 {

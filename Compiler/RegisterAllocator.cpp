@@ -124,7 +124,7 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 				cost[instruction.getOperandRepresentation(0)] += depth;
 			}
 		}
-		else if (instruction.opcode == "ldw")
+		else if (instruction.opcode == "ldw" || instruction.opcode == "pop")
 		{
 			if (node->alive.find(instruction.getOperandRepresentation(0)) != node->alive.end())
 			{
