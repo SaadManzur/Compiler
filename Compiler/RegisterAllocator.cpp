@@ -190,6 +190,8 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 
 void RegisterAllocator::generateEdgeBetween(string variable, set<string> alive)
 {
+	interferenceGraph[variable].insert(string());
+
 	for (string element : alive)
 	{
 		interferenceGraph[variable].insert(element);

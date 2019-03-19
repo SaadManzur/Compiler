@@ -4,25 +4,8 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-2 : mul 1 4 
-3 : add baseReg input_baseAddr 
-4 : adda (2) (3) 
-5 : store 22 (4) 
-6 : mul 2 4 
-8 : adda (6) (3) 
-9 : store 61 (8) 
-10 : mul 3 4 
-12 : adda (10) (3) 
-13 : store 17 (12) 
-16 : adda (2) (3) 
-17 : load (16)  
-18 : write (17)  
-21 : adda (6) (3) 
-22 : load (21)  
-23 : write (22)  
-26 : adda (10) (3) 
-27 : load (26)  
-28 : write (27)  
+1 : mov 1 a_1 
+2 : write a_1  
 ]"
 }node: {
 title: "00"
