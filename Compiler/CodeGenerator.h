@@ -2,6 +2,12 @@
 #ifndef _CODE_GENERATOR_H_
 #define _CODE_GENERATOR_H_
 
+#define SP 29
+#define FP 28
+#define RP1 9
+#define RP2 10
+#define SP_OFFSET 4
+
 #include <iostream>
 #include <vector>
 #include <stack>
@@ -23,15 +29,20 @@ private:
 	vector<IntermediateCode> intermediateCodeList;
 	vector<IntermediateCode> intermediateTargetCodeCandidates;
 	map<int, int> blockFirstInstructionAddress;
+	map<string, int> scopeStartingAddressInMemory;
+	map<string, Scope*> scopeNameMap;
 	vector<unsigned int> targetCodes;
 	int currentCodeAddress;
 
-	void generateControlFlow();
-	void processBranchingInstructions();
-	void processBlockLastInstructionIfBranching(int address);
+	void generateControlFlow(Scope *currentScope);
+	void processBranchingInstructions(int fromAddress=0);
+	void processBlockLastInstructionIfBranching(int address, int offset);
 	void integrateRegisterWithIntermediateCodes(Scope *currentScope);
 	void generateCode();
 	void generateCodeForInstruction(IntermediateCode instruction);
+	void initialize();
+	void prologue(int N = 4);
+	void epilogue(int M);
 
 	int getAssignmentCode(IntermediateCode instruction);
 	int getMathCode(IntermediateCode instruction, int opcode);

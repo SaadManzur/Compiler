@@ -94,6 +94,7 @@ public:
 	int addressRegister;
 	int previousSameOp;
 	int blockId;
+	string scopeName;
 
 	string getOperandRepresentation(int index);
 	string getImmediateAddressRepresentation();
