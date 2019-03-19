@@ -392,6 +392,7 @@ void Parser::ifStatement()
 			Next();
 
 			BasicBlock *joinBlock = new BasicBlock();
+			joinBlock->isJoinBlock = true;
 			joinBlockStack.push(joinBlock);
 			
 			phiFlag = 1;
@@ -1697,7 +1698,17 @@ void Parser::outputFunctionCalls()
 		cout << functionCalls[i];
 }
 
-void Parser::setRegisters(map<string, int> assignedRegisters)
+void Parser::setRegisters(Scope *function, map<string, int> assignedRegisters)
 {
-	this->assignedRegisters.insert(assignedRegisters.begin(), assignedRegisters.end());
+	function->assignedRegisters.insert(assignedRegisters.begin(), assignedRegisters.end());
+}
+
+vector<Scope*> Parser::getFunctions()
+{
+	return functions;
+}
+
+int Parser::getCurrentCodeAddress()
+{
+	return currentCodeAddress;
 }

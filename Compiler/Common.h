@@ -90,6 +90,8 @@ public:
 	string operand[MAXOPERANDLENGTH];
 	long long version[MAXOPERANDLENGTH];
 	string operandType[MAXOPERANDLENGTH];
+	int registers[MAXOPERANDLENGTH];
+	int addressRegister;
 	int previousSameOp;
 	int blockId;
 
@@ -114,6 +116,7 @@ public:
 	int id;
 	bool liveRangeGenerated = false;
 	bool isLoopHeader = false;
+	bool isJoinBlock = false;
 	bool loopPhiProcessed = false;
 	int loopCounter = 0;
 	vector<int> instructionAddrList;
@@ -126,6 +129,7 @@ public:
 	vector<BasicBlock *> back;
 	void addInstruction(IntermediateCode instr);
 	void addInstructionInBegining(IntermediateCode instr);
+	void addInstructionAtPosition(IntermediateCode instr, int i);
 	void removeInstruction(IntermediateCode instruction);
 	BasicBlock();
 };
@@ -145,6 +149,9 @@ public:
 	std::set<int> globalVarsModifies;
 	std::set<int> globalVarsUses;
 	std::vector<int> arguments;
+	std::map<string, int> assignedRegisters;
+
+	void setRegisters(map<string, int> registers);
 };
 
 void printIntermediateCode(IntermediateCode instr);

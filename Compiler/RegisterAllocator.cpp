@@ -1,8 +1,9 @@
 #include "RegisterAllocator.h"
 
-RegisterAllocator::RegisterAllocator(const Parser &parser)
+RegisterAllocator::RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress)
 {
-	this->parser = parser;
+	this->currentCodeAddress = currentCodeAddress;
+	this->redundancyEliminator = redundancyEliminator;
 
 	for (int i = 0; i < NUMBER_OF_REGISTERS; i++)
 	{
@@ -68,11 +69,14 @@ void RegisterAllocator::calculateLiveRange(BasicBlock *node, set<string> alive, 
 
 	calculateLiveRangeForBlock(node);
 
-	if (find(node->back.begin(), node->back.end(), node->dominatedBy) == node->back.end())
+	if (node->isJoinBlock)
 	{
 		int i = 0;
 		for (auto parentNode : node->back)
 		{
+			if (parentNode->id == node->dominatedBy->id)
+				continue;
+
 			set<string> aliveForParentNode;
 			set<string> setToSubtract = (i == 0) ? node->phiAliveFromRight : node->phiAliveFromLeft;
 
@@ -99,9 +103,10 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 
 		int instructionAddress = node->instructionAddrList[i];
 
-		IntermediateCode instruction = parser.getIntermediateCode(instructionAddress);
+		IntermediateCode instruction = redundancyEliminator->getIntermediateCode(instructionAddress);
+		transform(instruction.opcode.begin(), instruction.opcode.end(), instruction.opcode.begin(), ::tolower);
 
-		if (instruction.opcode == "mov")
+		if ( instruction.opcode == "mov")
 		{
 			if (node->alive.find(instruction.getOperandRepresentation(1)) != node->alive.end())
 			{
@@ -112,16 +117,22 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 
 			generateEdgeBetween(instruction.getOperandRepresentation(1), node->alive);
 
-			if (instruction.operandType[0] == "var")
+			if (instruction.operandType[0] == "var" || instruction.operandType[0] == "IntermediateCode")
 			{
 				node->alive.insert(instruction.getOperandRepresentation(0));
 				cost[instruction.getOperandRepresentation(0)] += depth;
 			}
-			else if (instruction.operandType[0] == "IntermediateCode")
+		}
+		else if (instruction.opcode == "ldw")
+		{
+			if (node->alive.find(instruction.getOperandRepresentation(0)) != node->alive.end())
 			{
-				node->alive.insert(instruction.operand[0]);
-				cost[instruction.operand[0]] += depth;
+				node->alive.erase(instruction.getOperandRepresentation(0));
 			}
+
+			cost[instruction.getOperandRepresentation(0)] += (depth * 0.5);
+
+			generateEdgeBetween(instruction.getOperandRepresentation(0), node->alive);
 		}
 		else if (instruction.opcode == "phi")
 		{
@@ -149,19 +160,14 @@ void RegisterAllocator::calculateLiveRangeForBlock(BasicBlock *node, int depth, 
 
 			node->loopPhiProcessed = true;
 		}
-		else
+		else if(instruction.opcode != "eliminated")
 		{
 			for (int j = 0; j < 3; j++)
 			{
-				if (instruction.operandType[j] == "var")
+				if (instruction.operandType[j] == "var" || instruction.operandType[j] == "IntermediateCode")
 				{
 					node->alive.insert(instruction.getOperandRepresentation(j));
 					cost[instruction.getOperandRepresentation(j)] += depth;
-				}
-				else if (instruction.operandType[j] == "IntermediateCode")
-				{
-					node->alive.insert(instruction.operand[j]);
-					cost[instruction.operand[j]] += depth;
 				}
 			}
 
@@ -249,12 +255,12 @@ void RegisterAllocator::assignColor(string node)
 
 	for (string adjacentNode : interferenceGraph[node])
 	{
-		registerInUse[assignedColors[adjacentNode]] = true;
+		registerInUse[assignedColors[adjacentNode]-1] = true;
 	}
 
-	for (int i = 0; i < NUMBER_OF_REGISTERS; i++)
+	for (int i = 1; i <= NUMBER_OF_REGISTERS; i++)
 	{
-		if (!registerInUse[i])
+		if (!registerInUse[i-1])
 		{
 			selectedRegister = i;
 			break;
@@ -284,7 +290,7 @@ string RegisterAllocator::spillRegisterAndGetNode()
 	return selectedNode;
 }
 
-void RegisterAllocator::eliminatePhi()
+void RegisterAllocator::coalsceLiveRanges()
 {
 	int clusterCount = 1;
 
@@ -335,21 +341,113 @@ void RegisterAllocator::applyClusterColor()
 	{
 		string clusterId = cluster.first;
 
-		for (string clusterMember : clusters[clusterId])
+		if (assignedColors.find(clusterId) != assignedColors.end())
 		{
-			assignedColors[clusterMember] = assignedColors[clusterId];
-		}
+			for (string clusterMember : clusters[clusterId])
+			{
+				assignedColors[clusterMember] = assignedColors[clusterId];
+			}
 
-		assignedColors.erase(clusterId);
+			assignedColors.erase(clusterId);
+		}
 	}
 }
 
-void RegisterAllocator::eliminateInstructions()
+void RegisterAllocator::eliminatePhi()
 {
+	set<int> eliminatedInstructions;
+
 	for (auto instruction : instructionsToBeEliminated)
 	{
 		instructionBlocks[instruction.address]->removeInstruction(instruction);
+
+		eliminatedInstructions.insert(instruction.address);
 	}
+	
+	for (int i = 0; i < phiInstructions.size(); i++)
+	{
+		IntermediateCode *instruction = &phiInstructions[i];
+
+		if (eliminatedInstructions.find(instruction->address) == eliminatedInstructions.end())
+		{
+			int phiRegister = assignedColors[instruction->operand[0] + "_" + to_string(instruction->version[0])];
+			int firstRegister = assignedColors[instruction->operand[1] + "_" + to_string(instruction->version[1])];
+			int secondRegister = assignedColors[instruction->operand[2] + "_" + to_string(instruction->version[2])];
+
+			BasicBlock *phiBlock = instructionBlocks[instruction->address];
+
+			if (phiRegister != firstRegister)
+			{
+				IntermediateCode movInstruction = createMoveInstruction(instruction, 1, 0);
+				redundancyEliminator->insertIntermediateCode(movInstruction);
+
+				if (phiBlock->isJoinBlock)
+				{
+					addInstructionToParent(movInstruction, phiBlock->back[0]);
+				}
+				else
+				{
+					addInstructionToParent(movInstruction, phiBlock->dominatedBy);
+				}
+			}
+			
+			if (phiRegister != secondRegister)
+			{
+				IntermediateCode movInstruction = createMoveInstruction(instruction, 2, 0);
+				redundancyEliminator->insertIntermediateCode(movInstruction);
+
+				if (phiBlock->isJoinBlock)
+				{
+					addInstructionToParent(movInstruction, phiBlock->back[1]);
+				}
+				else
+				{
+					addInstructionToParent(movInstruction, phiBlock->back[1]);
+				}
+			}
+			
+			phiBlock->removeInstruction(*instruction);
+		}
+	}
+	
+}
+
+IntermediateCode RegisterAllocator::createMoveInstruction(IntermediateCode *instruction, int i, int j)
+{
+
+	IntermediateCode movInstruction;
+	movInstruction.opcode = "mov";
+	movInstruction.address = currentCodeAddress++;
+	movInstruction.operand[0] = instruction->operand[i];
+	movInstruction.operand[1] = instruction->operand[j];
+	movInstruction.version[0] = instruction->version[i];
+	movInstruction.version[1] = instruction->version[j];
+	movInstruction.operandType[0] = instruction->operandType[i];
+	movInstruction.operandType[1] = instruction->operandType[j];
+
+	return movInstruction;
+}
+
+int RegisterAllocator::getFirstBranchingWithinBlock(BasicBlock * block)
+{
+	int i = block->instructionAddrList.size();
+
+	for (int address : block->instructionAddrList)
+	{
+		if (redundancyEliminator->getIntermediateCode(address).opcode[0] == 'b')
+		{
+			i--;
+		}
+	}
+
+	return i;
+}
+
+void RegisterAllocator::addInstructionToParent(IntermediateCode instruction, BasicBlock *parent)
+{
+	int branchingAddress = getFirstBranchingWithinBlock(parent);
+
+	parent->addInstructionAtPosition(instruction, branchingAddress);
 }
 
 
@@ -508,6 +606,11 @@ vector<IntermediateCode> RegisterAllocator::getInstructionsToBeEliminated()
 	return instructionsToBeEliminated;
 }
 
+int RegisterAllocator::getCurrentCodeAddress()
+{
+	return currentCodeAddress;
+}
+
 void RegisterAllocator::start(BasicBlock *root)
 {
 	fillParentBlocks(root);
@@ -518,15 +621,17 @@ void RegisterAllocator::start(BasicBlock *root)
 	calculateLiveRange(outerMostBlock, alive);
 
 	cout << endl << "Still alive : " << root->alive.size() << endl << endl;
-	printInterferenceGraph();
 
-	eliminatePhi();
-	eliminateInstructions();
+	coalsceLiveRanges();
 	printInterferenceGraph();
 	printClusters();
 
 	cout << endl << "-----------------Coloring-------------------" << endl;
 	colorGraph();
+	printAssignedRegisters();
+
 	applyClusterColor();
 	printAssignedRegisters();
+
+	eliminatePhi();
 }

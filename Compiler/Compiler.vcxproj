@@ -115,6 +115,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CodeGenerator.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="DLXProcessor.h" />
     <ClInclude Include="EliminateRedundency.h" />
@@ -125,6 +126,7 @@
     <ClInclude Include="Scanner.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CodeGenerator.cpp" />
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="DLXProcessor.cpp" />
     <ClCompile Include="EliminateRedundency.cpp" />

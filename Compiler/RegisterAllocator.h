@@ -3,7 +3,7 @@
 #define _REGISTER_ALLOCATOR
 
 #include "Common.h"
-#include "Parser.h"
+#include "EliminateRedundency.h"
 #include <set>
 #include <algorithm>
 #include <iterator>
@@ -11,7 +11,7 @@
 #include <iostream>
 #endif
 
-#define NUMBER_OF_REGISTERS 3
+#define NUMBER_OF_REGISTERS 8
 #define VIRTUAL_REGISTER_OFFSET 100
 
 class RegisterAllocator
@@ -28,7 +28,8 @@ private:
 	map<int, string> registers;
 	map<string, int> assignedColors;
 	vector<Result> aliveValues;
-	Parser parser = NULL;
+	EliminateRedundency *redundancyEliminator = NULL;
+	int currentCodeAddress;
 
 	void generateInterferenceGraph(BasicBlock *root);
 	void calculateLiveRange(BasicBlock* node, set<string> alive, int depth = 1);
@@ -40,10 +41,13 @@ private:
 	string getNodeWithDegreeLessThanN();
 	void assignColor(string node);
 	string spillRegisterAndGetNode();
-	void eliminatePhi();
+	void coalsceLiveRanges();
 	void replaceNodeWithCluster(string node, string clusterId, set<string> edges);
 	void applyClusterColor();
-	void eliminateInstructions();
+	void eliminatePhi();
+	IntermediateCode createMoveInstruction(IntermediateCode *instruction, int i, int j);
+	int getFirstBranchingWithinBlock(BasicBlock *block);
+	void addInstructionToParent(IntermediateCode instruction, BasicBlock *parent);
 	
 	void fillParentBlocks(BasicBlock *root);
 	void printParents(BasicBlock* root, set<BasicBlock*> visited);
@@ -52,11 +56,12 @@ private:
 	void printClusters();
 	bool aExistsInBDominatorTree(BasicBlock *nodeA, BasicBlock *nodeB);
 public:
-	RegisterAllocator(const Parser &parser);
+	RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress=0);
 
 	string getAssignedRegister(string operand);
 	map<string, int> getAllAssignedRegisters();
 	vector<IntermediateCode> getInstructionsToBeEliminated();
+	int getCurrentCodeAddress();
 
 	void start(BasicBlock *root);
 };
