@@ -17,7 +17,7 @@ int main()
 	std::FILE *stream;
 	try
 	{
-		Scanner *scanner = new Scanner("test/test011.txt");
+		Scanner *scanner = new Scanner("test/test009.txt");
 
 		Parser *parser= new Parser(scanner);
 		parser->Parse();
@@ -27,17 +27,17 @@ int main()
 		step2->CSE();
 		step2->printCodesByBlocks();
 
-		/*freopen_s(&stream, "cfg.vcg", "w", stdout);
+	/**/freopen_s(&stream, "cfg.vcg", "w", stdout);
 		parser->outputVCGFile();
 
 		freopen_s(&stream, "cfg after step2.vcg", "w", stdout);
-		step2->outputVCGFile();*/
-		
+		step2->outputVCGFile();
+		freopen_s(&stream, "CONOUT$", "w", stdout);
 	//	parser->printAllIntermediateCode();
 	//	cout << "..........complete........." << endl << endl;
 	//	parser->printCodesByBlocks();
 		
-		int currentCodeAddress = parser->getCurrentCodeAddress();
+	/**/	int currentCodeAddress = parser->getCurrentCodeAddress();
 
 		RegisterAllocator registerAllocator(step2, currentCodeAddress);
 		registerAllocator.start(step2->getGlobalScope()->root);
@@ -64,7 +64,7 @@ int main()
 		if (getchar())
 		{
 			codeGenerator.execute();
-		}
+		} 
 	}
 	catch (SyntaxException exception)
 	{

@@ -55,6 +55,9 @@ private:
 	void printAssignedRegisters();
 	void printClusters();
 	bool aExistsInBDominatorTree(BasicBlock *nodeA, BasicBlock *nodeB);
+	int tryMerge(string c1, string c2);
+	int mergeClusters();
+	string getClusterName(string x);
 public:
 	RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress=0);
 
