@@ -13,7 +13,9 @@ RegisterAllocator::RegisterAllocator(EliminateRedundency *redundancyEliminator, 
 
 void RegisterAllocator::generateInterferenceGraph(BasicBlock* root)
 {
-	fillParentBlocks(root);
+//	fillParentBlocks(root);
+	visited.clear();
+	fillParentBlocksDFS(root);
 }
 
 void RegisterAllocator::calculateLiveRange(BasicBlock *node, set<string> alive, int depth)
@@ -653,6 +655,82 @@ string RegisterAllocator::getClusterName(string x)
 	return x;
 }
 
+
+
+void RegisterAllocator::fillParentBlocksDFS(BasicBlock * root)
+{
+	if (root == NULL)
+		return;
+
+	visited.insert(root);
+
+	for (int address : root->instructionAddrList)
+	{
+		instructionBlocks[address] = root;
+	}
+
+	if (root->next.size() == 0)
+		outerMostBlock = root;
+
+/*	for (auto childBlock : root->next)
+	{
+		childBlock->back.push_back(root);
+	}
+	*/
+	for (auto dominatedBlock : root->dominates)
+	{
+		dominatedBlock->dominatedBy = root;
+	}
+
+	for (int i = 0; i < root->next.size(); i++)
+	{
+		root->next[i]->back.push_back(root);
+		if (visited.find(root->next[i]) == visited.end())
+		{
+			fillParentBlocksDFS(root->next[i]);
+		}
+	}
+
+
+/*
+
+	while (!blocks.empty())
+	{
+		BasicBlock *currentBlock = blocks.front();
+		blocks.pop();
+
+		if (visited.find(currentBlock) != visited.end())
+		{
+			continue;
+		}
+
+		visited.insert(currentBlock);
+
+		for (int address : currentBlock->instructionAddrList)
+		{
+			instructionBlocks[address] = currentBlock;
+		}
+
+		if (currentBlock->next.size() == 0)
+			outerMostBlock = currentBlock;
+
+		for (auto childBlock : currentBlock->next)
+		{
+			childBlock->back.push_back(currentBlock);
+
+			if (visited.find(childBlock) == visited.end())
+			{
+				blocks.push(childBlock);
+			}
+		}
+
+		for (auto dominatedBlock : currentBlock->dominates)
+		{
+			dominatedBlock->dominatedBy = currentBlock;
+		}
+	}*/
+}
+
 string RegisterAllocator::getAssignedRegister(string operand)
 {
 	return "R" + to_string(assignedColors[operand]);
@@ -675,7 +753,9 @@ int RegisterAllocator::getCurrentCodeAddress()
 
 void RegisterAllocator::start(BasicBlock *root)
 {
-	fillParentBlocks(root);
+//	fillParentBlocks(root);
+	visited.clear();
+	fillParentBlocksDFS(root);
 
 	set<string> alive;
 
