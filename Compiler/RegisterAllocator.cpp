@@ -765,10 +765,10 @@ void RegisterAllocator::start(BasicBlock *root)
 	cout << endl << "Still alive : " << root->alive.size() << endl << endl;
 
 
-	printInterferenceGraph();
+//	printInterferenceGraph();
 	coalsceLiveRanges();
-	printInterferenceGraph();
-	printClusters();
+//	printInterferenceGraph();
+//	printClusters();
 	while (mergeClusters());
 	printInterferenceGraph();
 	printClusters();

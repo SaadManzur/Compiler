@@ -4,129 +4,112 @@ smanhattan_edges: yes
 node: {
 title: "0"
 label: "0[
-3 : mov 1 a_3 
-4 : mov 2 b_4 
-5 : mov 3 c_5 
-6 : cmp a_3 b_4 
-7 : bge (6) 7 
+33 : read
+45 : push
+35 : push (33)  
+36 : JSR 1  
+37 : pop   
+38 : write (37)  
+39 : writeNL
+46 : push
+40 : push (33)  
+41 : JSR 5  
+42 : pop   
+43 : write (42)  
+44 : writeNL
 ]"
-}edge: { sourcename: "0"  targetname: "1" color: blue }
-node: {
+}node: {
 title: "1"
 label: "1[
-8 : add a_3 1 
-11 : cmp (8) b_4 
-12 : bne (11) 4 
+4 : prologue   
+5 : LDS n_5 2 
+6 : mov 1 i_6 
+7 : mov 1 f_7 
 ]"
-}edge: { sourcename: "1"  targetname: "3" color: blue }
+}edge: { sourcename: "1"  targetname: "2" color: blue }
+node: {
+title: "2"
+label: "2[
+15 : phi i_15 i_6 (13)
+12 : phi f_12 f_7 (10)
+8 : cmp i_15 n_5 
+9 : bgt (8) 4 
+]"
+}edge: { sourcename: "2"  targetname: "3" color: blue }
 node: {
 title: "3"
 label: "3[
-13 : mul (8) 4 
-16 : cmp c_5 (13) 
-17 : beq (16) 6 
+10 : mul f_12 i_15 
+13 : add i_15 1 
+16 : bra 2  
 ]"
-}edge: { sourcename: "3"  targetname: "5" color: blue }
+}edge: { sourcename: "3"  targetname: "2" color: blue }
+edge: { sourcename: "2"  targetname: "4" color: blue }
 node: {
+title: "4"
+label: "4[
+17 : STS f_12 3 
+18 : epilogue   
+]"
+}node: {
 title: "5"
 label: "5[
+20 : prologue   
+21 : LDS n_21 2 
+22 : cmp n_21 1 
+23 : bgt (22) 7 
 ]"
 }edge: { sourcename: "5"  targetname: "6" color: blue }
 node: {
 title: "6"
 label: "6[
-19 : phi c_19 (13) c_5
+24 : STS 1 3 
+25 : epilogue   
 ]"
-}edge: { sourcename: "6"  targetname: "4" color: blue }
-node: {
-title: "4"
-label: "4[
-15 : phi a_15 (13) (8)
-20 : phi c_20 c_19 c_5
-22 : bra 2  
-]"
-}edge: { sourcename: "4"  targetname: "2" color: blue }
-node: {
-title: "2"
-label: "2[
-10 : phi a_10 a_15 a_30
-21 : phi c_21 c_20 c_5
-25 : phi b_25 b_4 (23)
-34 : add a_10 1 
-36 : write (34)  
-]"
-}edge: { sourcename: "3"  targetname: "6" color: blue }
-edge: { sourcename: "1"  targetname: "4" color: blue }
-edge: { sourcename: "0"  targetname: "7" color: blue }
+}edge: { sourcename: "6"  targetname: "7" color: blue }
 node: {
 title: "7"
 label: "7[
-23 : add b_4 5 
-26 : cmp a_3 (23) 
-27 : bge (26) 10 
+26 : sub n_21 1 
+47 : push
+27 : push (26)  
+28 : JSR 5  
+29 : pop   
+30 : mul (29) n_21 
+31 : STS (30) 3 
+32 : epilogue   
 ]"
-}edge: { sourcename: "7"  targetname: "8" color: blue }
-node: {
-title: "8"
-label: "8[
-28 : sub a_3 2 
-31 : bra 9  
-]"
-}edge: { sourcename: "8"  targetname: "9" color: blue }
-node: {
-title: "9"
-label: "9[
-30 : phi a_30 (28) (32)
-]"
-}edge: { sourcename: "9"  targetname: "2" color: blue }
-edge: { sourcename: "7"  targetname: "10" color: blue }
-node: {
-title: "10"
-label: "10[
-32 : add a_3 3 
-]"
-}edge: { sourcename: "10"  targetname: "9" color: blue }
+}edge: { sourcename: "5"  targetname: "7" color: blue }
+edge: { sourcename: "0"  targetname: "1" color: Red }
+edge: { sourcename: "0"  targetname: "5" color: Red }
+edge: { sourcename: "7"  targetname: "5" color: Red }
 node: {
 title: "00"
 label: "0"}
-edge: { sourcename: "00"  targetname: "01" color: green }
 node: {
 title: "01"
 label: "1"}
-edge: { sourcename: "01"  targetname: "03" color: green }
-node: {
-title: "03"
-label: "3"}
-edge: { sourcename: "03"  targetname: "05" color: green }
-node: {
-title: "05"
-label: "5"}
-edge: { sourcename: "03"  targetname: "06" color: green }
-node: {
-title: "06"
-label: "6"}
-edge: { sourcename: "01"  targetname: "04" color: green }
-node: {
-title: "04"
-label: "4"}
-edge: { sourcename: "00"  targetname: "07" color: green }
-node: {
-title: "07"
-label: "7"}
-edge: { sourcename: "07"  targetname: "08" color: green }
-node: {
-title: "08"
-label: "8"}
-edge: { sourcename: "07"  targetname: "010" color: green }
-node: {
-title: "010"
-label: "10"}
-edge: { sourcename: "07"  targetname: "09" color: green }
-node: {
-title: "09"
-label: "9"}
-edge: { sourcename: "00"  targetname: "02" color: green }
+edge: { sourcename: "01"  targetname: "02" color: green }
 node: {
 title: "02"
 label: "2"}
+edge: { sourcename: "02"  targetname: "03" color: green }
+node: {
+title: "03"
+label: "3"}
+edge: { sourcename: "02"  targetname: "04" color: green }
+node: {
+title: "04"
+label: "4"}
+node: {
+title: "05"
+label: "5"}
+edge: { sourcename: "05"  targetname: "06" color: green }
+node: {
+title: "06"
+label: "6"}
+edge: { sourcename: "05"  targetname: "07" color: green }
+node: {
+title: "07"
+label: "7"}
 }
