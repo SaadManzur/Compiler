@@ -407,7 +407,8 @@ void Parser::ifStatement()
 			{
 				
 				instrJumpToFi = createIntermediateCode("bra", Result(), Result());   //Result parameters are dummy
-				thenBlock->addInstruction(instrJumpToFi);
+			//	thenBlock->addInstruction(instrJumpToFi);
+				currentBlock->addInstruction(instrJumpToFi);
 
 				jumpToElse = currentCodeAddress;
 
@@ -445,9 +446,11 @@ void Parser::ifStatement()
 				if (instrJumpToFi.opcode.length() > 0)
 				{
 					//intermediateCodelist[instrJumpToFi.address].operand[0]= "(" + to_string(currentCodeAddress) + ")";
-					intermediateCodelist[instrJumpToFi.address].version[0] = (long long)(thenBlock->next[0]);
+				//	intermediateCodelist[instrJumpToFi.address].version[0] = (long long)(thenBlock->next[0]);
+					intermediateCodelist[instrJumpToFi.address].version[0] = (long long)(joinBlock);
 					intermediateCodelist[instrJumpToFi.address].operandType[0] = "JumpAddr";
 				}
+
 
 				joinBlockStack.pop();
 				loadOldCachedVersion(oldCachedVersionTable, oldCachedGlobalVersionTable);
