@@ -34,6 +34,7 @@ private:
 	map<int, IntermediateCode> branchInstructionsPending;
 	map<string, int> arrayBaseAddress;
 	map<string, int> globalAddress;
+	map<int, int> proxyAddress;
 	vector<unsigned int> targetCodes;
 	int currentCodeAddress;
 	bool dummyPushed = false;

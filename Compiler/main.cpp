@@ -44,16 +44,18 @@ int main()
 		step2->getGlobalScope()->setRegisters(registerAllocator.getAllAssignedRegisters());
 		currentCodeAddress = registerAllocator.getCurrentCodeAddress();
 
+		int lastVirtualRegisterNumber = registerAllocator.getLastVirtualRegisterNumber();
 		vector<Scope *> functions = step2->getFunctions();
 		for (Scope * function : functions)
 		{
-			RegisterAllocator registerAllocator(step2, currentCodeAddress);
+			RegisterAllocator registerAllocator(step2, currentCodeAddress, lastVirtualRegisterNumber+1);
 			registerAllocator.start(function->root);
 
 			cout << "..........after allocation........." << endl << endl;
 			function->setRegisters(registerAllocator.getAllAssignedRegisters());
 
 			currentCodeAddress = registerAllocator.getCurrentCodeAddress();
+			lastVirtualRegisterNumber = registerAllocator.getLastVirtualRegisterNumber();
 		}
 		
 		CodeGenerator codeGenerator(step2->getGlobalScope(), step2->getFunctions(), step2->getIntermediateCodeList(), currentCodeAddress);

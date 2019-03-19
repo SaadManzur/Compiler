@@ -1,6 +1,6 @@
 #include "RegisterAllocator.h"
 
-RegisterAllocator::RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress)
+RegisterAllocator::RegisterAllocator(EliminateRedundency *redundancyEliminator, int currentCodeAddress, int proxyRegisterStart)
 {
 	this->currentCodeAddress = currentCodeAddress;
 	this->redundancyEliminator = redundancyEliminator;
@@ -9,6 +9,8 @@ RegisterAllocator::RegisterAllocator(EliminateRedundency *redundancyEliminator, 
 	{
 		registers[i] = "R" + to_string(i + 1);
 	}
+
+	lastVirtualRegisterNumber = proxyRegisterStart;
 }
 
 void RegisterAllocator::generateInterferenceGraph(BasicBlock* root)
@@ -672,6 +674,11 @@ vector<IntermediateCode> RegisterAllocator::getInstructionsToBeEliminated()
 int RegisterAllocator::getCurrentCodeAddress()
 {
 	return currentCodeAddress;
+}
+
+int RegisterAllocator::getLastVirtualRegisterNumber()
+{
+	return lastVirtualRegisterNumber;
 }
 
 void RegisterAllocator::start(BasicBlock *root)
